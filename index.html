@@ -414,16 +414,15 @@
 
     // Global Fallback Configuration
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'music-game-memo';
-    const firebaseConfig = typeof __firebase_config !== 'undefined' 
-      ? JSON.parse(__firebase_config) 
-      : {
-          apiKey: "AIzaSyDummyKeyForFallbackOnly",
-          authDomain: "dummy.firebaseapp.com",
-          projectId: "dummy-project",
-          storageBucket: "dummy.appspot.com",
-          messagingSenderId: "123456789",
-          appId: "1:123456789:web:dummy"
-        };
+    const firebaseConfig = {
+  apiKey: "AIzaSyDL3y35BUpa5PJnnPNzcBGdS3zETRQETFE",
+  authDomain: "music-game-memo.firebaseapp.com",
+  projectId: "music-game-memo",
+  storageBucket: "music-game-memo.firebasestorage.app",
+  messagingSenderId: "561235226598",
+  appId: "1:561235226598:web:498e79bb53facb9fe6b027",
+  measurementId: "G-F9Q6B4X347"
+};
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
