@@ -18,7 +18,7 @@
       background-color: var(--bg-color);
       color: var(--text-color);
       margin: 0;
-      padding: 16px;
+      padding: 12px;
       -webkit-user-select: none;
       user-select: none;
     }
@@ -28,23 +28,23 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .header-area h1 {
       margin: 0;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
     }
 
     .btn {
       background-color: #2979ff;
       color: #fff;
       border: none;
-      padding: 8px 16px;
+      padding: 6px 12px;
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
 
     .btn:hover {
@@ -55,18 +55,22 @@
       background-color: #444;
     }
 
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      background-color: #2e7d32;
+    }
+
     /* 機種選択エリア */
     .game-select-container {
       display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 24px;
+      gap: 8px;
+      margin-bottom: 20px;
     }
 
     .game-btn {
       flex: 1;
-      min-width: 100px;
-      padding: 14px 8px;
+      padding: 10px 4px;
       background-color: var(--card-bg);
       border: 2px solid #333;
       border-radius: 8px;
@@ -74,6 +78,7 @@
       font-weight: bold;
       cursor: pointer;
       text-align: center;
+      font-size: 0.85rem;
       transition: border-color 0.2s, background-color 0.2s;
     }
 
@@ -89,40 +94,67 @@
       justify-content: space-between;
       border-bottom: 2px solid #333;
       padding-bottom: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .game-title-bar h2 {
       margin: 0;
-      font-size: 1.25rem;
+      font-size: 1.15rem;
     }
 
     /* 目標ランク別のグループ */
     .target-group {
-      margin-bottom: 28px;
+      margin-bottom: 24px;
+      background-color: rgba(255, 255, 255, 0.02);
+      border-radius: 8px;
+      padding: 8px;
     }
 
     .target-group-header {
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #00bcd4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       border-bottom: 1px solid #333;
-      padding-bottom: 4px;
-      margin-bottom: 12px;
+      padding-bottom: 6px;
+      margin-bottom: 10px;
     }
 
-    /* グリッドレイアウト */
+    .target-group-title {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #00bcd4;
+    }
+
+    .target-group-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .delete-group-btn {
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .delete-group-btn:hover {
+      color: var(--danger-color);
+    }
+
+    /* グリッドレイアウト（スマホ対応：自動改行） */
     .song-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 12px;
-      min-height: 50px;
+      grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+      gap: 8px;
+      min-height: 40px;
     }
 
     /* カードデザイン */
     .song-card {
       background-color: var(--card-bg);
-      border-radius: 8px;
+      border-radius: 6px;
       overflow: hidden;
       position: relative;
       display: flex;
@@ -160,22 +192,22 @@
     .diff-ultima { border: 3px solid #b71c1c; }
     .diff-remaster { border: 3px solid #e0e0e0; }
 
-    /* 定数バッジ（右端に配置） */
+    /* 定数バッジ */
     .const-badge {
       position: absolute;
-      bottom: 4px;
-      right: 4px;
-      background-color: rgba(0, 0, 0, 0.75);
+      bottom: 2px;
+      right: 2px;
+      background-color: rgba(0, 0, 0, 0.8);
       color: #fff;
-      font-size: 0.75rem;
+      font-size: 0.65rem;
       font-weight: bold;
-      padding: 2px 5px;
-      border-radius: 4px;
+      padding: 1px 4px;
+      border-radius: 3px;
     }
 
-    /* 達成状態（チェックマーク） */
+    /* 達成状態 */
     .song-card.completed .jacket-img {
-      filter: brightness(0.4);
+      filter: brightness(0.35);
     }
 
     .checkmark {
@@ -184,11 +216,11 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 2.5rem;
+      font-size: 2rem;
       color: var(--accent-color);
       font-weight: bold;
       pointer-events: none;
-      text-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
+      text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
     }
 
     .song-card.completed .checkmark {
@@ -196,14 +228,14 @@
     }
 
     .song-info {
-      padding: 6px;
+      padding: 4px;
       display: flex;
       flex-direction: column;
       gap: 2px;
     }
 
     .song-title {
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       font-weight: bold;
       white-space: nowrap;
       overflow: hidden;
@@ -214,18 +246,18 @@
       background: none;
       border: none;
       color: var(--danger-color);
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       cursor: pointer;
       text-align: right;
-      padding: 2px 0 0 0;
+      padding: 0;
     }
 
-    /* モーダルダイアログ */
+    /* モーダル */
     .modal-overlay {
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.75);
       z-index: 1000;
       justify-content: center;
       align-items: center;
@@ -237,44 +269,46 @@
 
     .modal-content {
       background-color: var(--card-bg);
-      padding: 20px;
+      padding: 16px;
       border-radius: 12px;
-      width: 90%;
-      max-width: 400px;
+      width: 88%;
+      max-width: 360px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
 
     .modal-content h3 {
-      margin: 0 0 8px 0;
+      margin: 0 0 4px 0;
+      font-size: 1.05rem;
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
     }
 
     .form-group label {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: #aaa;
     }
 
     .form-group input, .form-group select {
-      padding: 8px;
+      padding: 7px;
       border-radius: 4px;
       border: 1px solid #444;
       background-color: #2a2a2a;
       color: #fff;
+      font-size: 0.9rem;
     }
 
     .modal-actions {
       display: flex;
       justify-content: flex-end;
       gap: 8px;
-      margin-top: 8px;
+      margin-top: 6px;
     }
   </style>
 </head>
@@ -297,20 +331,30 @@
   <div id="mainContent">
     <div class="game-title-bar">
       <h2 id="currentGameTitle">オンゲキ課題曲</h2>
-      <button class="btn" onclick="openAddModal()">課題曲追加</button>
+      <button class="btn" onclick="openTargetModal()">＋ 項目を追加</button>
     </div>
 
     <!-- 課題曲リスト表示場所 -->
     <div id="listContainer"></div>
   </div>
 
-  <!-- 課題曲追加モーダル -->
-  <div class="modal-overlay" id="addModal">
+  <!-- 1. 項目（目標）追加モーダル -->
+  <div class="modal-overlay" id="targetModal">
     <div class="modal-content">
-      <h3>課題曲を追加</h3>
-      
-      <!-- 目標値フォーム -->
+      <h3>項目を追加</h3>
       <div id="targetFormArea"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeTargetModal()">キャンセル</button>
+        <button class="btn" onclick="addTargetGroup()">作成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 楽曲追加モーダル -->
+  <div class="modal-overlay" id="songModal">
+    <div class="modal-content">
+      <h3 id="songModalTitle">楽曲を追加</h3>
+      <input type="hidden" id="activeTargetLabel">
 
       <div class="form-group">
         <label for="songTitle">曲名 (手入力)</label>
@@ -333,16 +377,17 @@
       </div>
 
       <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeAddModal()">キャンセル</button>
+        <button class="btn btn-secondary" onclick="closeSongModal()">キャンセル</button>
         <button class="btn" onclick="addSong()">追加</button>
       </div>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = 'my_game_challenge_songs_local_v1';
+    const STORAGE_KEY = 'my_game_challenge_songs_local_v4';
     let currentGame = 'ongeki';
 
+    // 機種ごとのマスター設定
     const GAME_CONFIG = {
       ongeki: {
         name: 'オンゲキ',
@@ -358,6 +403,7 @@
           { name: 'BASIC', class: 'diff-basic' },
           { name: 'LUNATIC', class: 'diff-lunatic' }
         ],
+        defaultDiff: 'MASTER',
         maxConst: 15.7, minConst: 1.0
       },
       chunithm: {
@@ -367,12 +413,13 @@
           { key: 'score', label: 'スコアランク', options: ['なし', 'SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S'] }
         ],
         difficulties: [
-          { name: 'ULTIMA', class: 'diff-ultima' },
           { name: 'MASTER', class: 'diff-master' },
           { name: 'EXPERT', class: 'diff-expert' },
           { name: 'ADVANCED', class: 'diff-advanced' },
-          { name: 'BASIC', class: 'diff-basic' }
+          { name: 'BASIC', class: 'diff-basic' },
+          { name: 'ULTIMA', class: 'diff-ultima' }
         ],
+        defaultDiff: 'MASTER',
         maxConst: 16.0, minConst: 1.0
       },
       maimai: {
@@ -383,19 +430,24 @@
           { key: 'dscore', label: 'でらっくすスコア', options: ['なし', '★5', '★4', '★3', '★2', '★1'] }
         ],
         difficulties: [
-          { name: 'RE:MASTER', class: 'diff-remaster' },
           { name: 'MASTER', class: 'diff-master' },
           { name: 'EXPERT', class: 'diff-expert' },
           { name: 'ADVANCED', class: 'diff-advanced' },
-          { name: 'BASIC', class: 'diff-basic' }
+          { name: 'BASIC', class: 'diff-basic' },
+          { name: 'RE:MASTER', class: 'diff-remaster' }
         ],
+        defaultDiff: 'MASTER',
         maxConst: 15.0, minConst: 1.0
       }
     };
 
     function loadAllData() {
       const data = localStorage.getItem(STORAGE_KEY);
-      return data ? JSON.parse(data) : { ongeki: [], chunithm: [], maimai: [] };
+      return data ? JSON.parse(data) : {
+        ongeki: { targets: [], songs: [] },
+        chunithm: { targets: [], songs: [] },
+        maimai: { targets: [], songs: [] }
+      };
     }
 
     function saveAllData(data) {
@@ -411,7 +463,8 @@
       renderList();
     }
 
-    function openAddModal() {
+    /* --- 項目（目標グループ）の追加モーダル --- */
+    function openTargetModal() {
       const config = GAME_CONFIG[currentGame];
       const targetArea = document.getElementById('targetFormArea');
       targetArea.innerHTML = '';
@@ -423,33 +476,14 @@
         </select>`;
         targetArea.appendChild(group);
       });
-
-      const diffSelect = document.getElementById('difficulty');
-      diffSelect.innerHTML = config.difficulties.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
-
-      const constSelect = document.getElementById('constant');
-      constSelect.innerHTML = '';
-      for (let v = config.maxConst; v >= config.minConst; v = (v - 0.1).toFixed(1)) {
-        const valStr = parseFloat(v).toFixed(1);
-        constSelect.innerHTML += `<option value="${valStr}">${valStr}</option>`;
-      }
-
-      document.getElementById('addModal').classList.add('active');
+      document.getElementById('targetModal').classList.add('active');
     }
 
-    function closeAddModal() {
-      document.getElementById('addModal').classList.remove('active');
+    function closeTargetModal() {
+      document.getElementById('targetModal').classList.remove('active');
     }
 
-    function addSong() {
-      const title = document.getElementById('songTitle').value.trim();
-      const difficulty = document.getElementById('difficulty').value;
-      const constant = parseFloat(document.getElementById('constant').value);
-      const imageInput = document.getElementById('jacketImage');
-
-      if (!title) return alert('曲名を入力してください');
-      if (imageInput.files.length === 0) return alert('ジャケット画像を選択してください');
-
+    function addTargetGroup() {
       const config = GAME_CONFIG[currentGame];
       const targetObj = {};
       config.targets.forEach(t => {
@@ -463,18 +497,84 @@
       if (targetObj.pscore) selectedTargets.push(targetObj.pscore);
       if (targetObj.dscore) selectedTargets.push(targetObj.dscore);
 
-      const targetLabel = selectedTargets.length > 0 ? selectedTargets.join(' / ') : '目標なし';
+      if (selectedTargets.length === 0) return alert('いずれかの目標値を選択してください');
+
+      const targetLabel = selectedTargets.join(' / ');
+      const allData = loadAllData();
+      const gameData = allData[currentGame] || { targets: [], songs: [] };
+
+      if (!gameData.targets.some(t => t.label === targetLabel)) {
+        gameData.targets.push({
+          label: targetLabel,
+          targetObj: targetObj
+        });
+        allData[currentGame] = gameData;
+        saveAllData(allData);
+      }
+
+      closeTargetModal();
+      renderList();
+    }
+
+    function deleteTargetGroup(targetLabel) {
+      if (!confirm(`「${targetLabel}」の項目と登録されている楽曲を削除しますか？`)) return;
+      const allData = loadAllData();
+      const gameData = allData[currentGame];
+      
+      gameData.targets = gameData.targets.filter(t => t.label !== targetLabel);
+      gameData.songs = gameData.songs.filter(s => s.targetLabel !== targetLabel);
+
+      allData[currentGame] = gameData;
+      saveAllData(allData);
+      renderList();
+    }
+
+    /* --- 楽曲追加モーダル --- */
+    function openSongModal(targetLabel) {
+      const config = GAME_CONFIG[currentGame];
+      document.getElementById('activeTargetLabel').value = targetLabel;
+      document.getElementById('songModalTitle').textContent = `楽曲追加 (${targetLabel})`;
+
+      // 難易度プルダウン（MASTER初期選択）
+      const diffSelect = document.getElementById('difficulty');
+      diffSelect.innerHTML = config.difficulties.map(d => 
+        `<option value="${d.name}" ${d.name === config.defaultDiff ? 'selected' : ''}>${d.name}</option>`
+      ).join('');
+
+      // 定数プルダウン
+      const constSelect = document.getElementById('constant');
+      constSelect.innerHTML = '';
+      for (let v = config.maxConst; v >= config.minConst; v = (v - 0.1).toFixed(1)) {
+        const valStr = parseFloat(v).toFixed(1);
+        constSelect.innerHTML += `<option value="${valStr}">${valStr}</option>`;
+      }
+
+      document.getElementById('songModal').classList.add('active');
+    }
+
+    function closeSongModal() {
+      document.getElementById('songModal').classList.remove('active');
+    }
+
+    function addSong() {
+      const targetLabel = document.getElementById('activeTargetLabel').value;
+      const title = document.getElementById('songTitle').value.trim();
+      const difficulty = document.getElementById('difficulty').value;
+      const constant = parseFloat(document.getElementById('constant').value);
+      const imageInput = document.getElementById('jacketImage');
+
+      if (!title) return alert('曲名を入力してください');
+      if (imageInput.files.length === 0) return alert('ジャケット画像を選択してください');
 
       const file = imageInput.files[0];
       const reader = new FileReader();
       reader.onload = function (e) {
         const allData = loadAllData();
-        const songs = allData[currentGame];
+        const songs = allData[currentGame].songs;
 
         const newSong = {
           id: Date.now(),
           title: title,
-          targetObj: targetObj,
           targetLabel: targetLabel,
           difficulty: difficulty,
           constant: constant,
@@ -482,7 +582,7 @@
           isCompleted: false
         };
 
-        // 同じ目標グループ内で定数が自分より小さいものの前に挿入
+        // 同じ目標グループ内で定数が自分より小さい楽曲の直前（左側）に挿入
         let insertIndex = -1;
         for (let i = 0; i < songs.length; i++) {
           if (songs[i].targetLabel === targetLabel) {
@@ -503,7 +603,7 @@
 
         document.getElementById('songTitle').value = '';
         document.getElementById('jacketImage').value = '';
-        closeAddModal();
+        closeSongModal();
         renderList();
       };
       reader.readAsDataURL(file);
@@ -511,7 +611,7 @@
 
     function toggleComplete(id) {
       const allData = loadAllData();
-      const song = allData[currentGame].find(s => s.id === id);
+      const song = allData[currentGame].songs.find(s => s.id === id);
       if (song) {
         song.isCompleted = !song.isCompleted;
         saveAllData(allData);
@@ -520,20 +620,17 @@
     }
 
     function deleteSong(id) {
-      if (!confirm('削除しますか？')) return;
+      if (!confirm('この楽曲を削除しますか？')) return;
       const allData = loadAllData();
-      allData[currentGame] = allData[currentGame].filter(s => s.id !== id);
+      allData[currentGame].songs = allData[currentGame].songs.filter(s => s.id !== id);
       saveAllData(allData);
       renderList();
     }
 
-    function getGroupPriority(targetLabel, songsInGroup) {
-      const sample = songsInGroup[0];
-      const obj = sample.targetObj || {};
-
-      if ((obj.pscore || obj.dscore) && !obj.clear && !obj.score) {
-        return -1000;
-      }
+    // 目標グループ優先度
+    function getGroupPriority(targetObj) {
+      const obj = targetObj || {};
+      if ((obj.pscore || obj.dscore) && !obj.clear && !obj.score) return -1000;
 
       let scoreVal = 0;
       let clearVal = 0;
@@ -542,46 +639,48 @@
         const options = ['FC', 'AB', 'AB+', 'AJ', 'AJC', 'AP', 'AP+'];
         clearVal = (options.indexOf(obj.clear) + 1) * 1000;
       }
-
       if (obj.score) {
         const options = ['S', 'S+', 'SS', 'SS+', 'SSS', 'SSS+'];
         scoreVal = options.indexOf(obj.score) + 1;
       }
-
       return clearVal + scoreVal;
     }
 
+    /* 描画処理 */
     function renderList() {
       const allData = loadAllData();
-      const songs = allData[currentGame] || [];
+      const gameData = allData[currentGame] || { targets: [], songs: [] };
       const container = document.getElementById('listContainer');
       container.innerHTML = '';
 
-      if (songs.length === 0) {
-        container.innerHTML = '<div style="color:#666; text-align:center; padding: 40px 0;">課題曲が登録されていません</div>';
+      if (gameData.targets.length === 0) {
+        container.innerHTML = '<div style="color:#666; text-align:center; padding: 40px 0;">「＋ 項目を追加」から目標を作成してください</div>';
         return;
       }
 
-      const groups = {};
-      songs.forEach(song => {
-        if (!groups[song.targetLabel]) groups[song.targetLabel] = [];
-        groups[song.targetLabel].push(song);
-      });
-
-      const sortedGroupLabels = Object.keys(groups).sort((a, b) => {
-        return getGroupPriority(b, groups[b]) - getGroupPriority(a, groups[a]);
+      // 優先度ソート
+      const sortedTargets = [...gameData.targets].sort((a, b) => {
+        return getGroupPriority(b.targetObj) - getGroupPriority(a.targetObj);
       });
 
       const config = GAME_CONFIG[currentGame];
 
-      sortedGroupLabels.forEach(targetLabel => {
-        const songList = groups[targetLabel];
+      sortedTargets.forEach(targetItem => {
+        const targetLabel = targetItem.label;
+        const songList = gameData.songs.filter(s => s.targetLabel === targetLabel);
+
         const groupDiv = document.createElement('div');
         groupDiv.className = 'target-group';
 
         const header = document.createElement('div');
         header.className = 'target-group-header';
-        header.textContent = targetLabel;
+        header.innerHTML = `
+          <div class="target-group-title">${targetLabel}</div>
+          <div class="target-group-actions">
+            <button class="btn btn-sm" onclick="openSongModal('${targetLabel}')">＋ 楽曲を追加</button>
+            <button class="delete-group-btn" onclick="deleteTargetGroup('${targetLabel}')">削除</button>
+          </div>
+        `;
         groupDiv.appendChild(header);
 
         const grid = document.createElement('div');
@@ -618,6 +717,7 @@
       });
     }
 
+    /* ドラッグ＆ドロップ */
     let draggedItem = null;
 
     function setupDragAndDrop(card) {
@@ -664,7 +764,7 @@
 
     function updateOrderFromDOM() {
       const allData = loadAllData();
-      const currentSongs = allData[currentGame];
+      const currentSongs = allData[currentGame].songs;
       const newOrderedSongs = [];
 
       document.querySelectorAll('.song-card').forEach(card => {
@@ -673,7 +773,7 @@
         if (song) newOrderedSongs.push(song);
       });
 
-      allData[currentGame] = newOrderedSongs;
+      allData[currentGame].songs = newOrderedSongs;
       saveAllData(allData);
     }
 
