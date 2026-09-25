@@ -11,15 +11,10 @@
       --text-color: #ffffff;
       --accent-color: #00e676;
       --danger-color: #ff5252;
-      --primary-color: #2979ff;
-    }
-
-    * {
-      box-sizing: border-box;
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg-color);
       color: var(--text-color);
       margin: 0;
@@ -33,40 +28,16 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-      gap: 12px;
+      margin-bottom: 20px;
     }
 
     .header-area h1 {
       margin: 0;
       font-size: 1.5rem;
-      letter-spacing: 0.5px;
-    }
-
-    .user-section {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.85rem;
-    }
-
-    .user-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 1px solid #444;
     }
 
     .btn {
-      background-color: var(--primary-color);
+      background-color: #2979ff;
       color: #fff;
       border: none;
       padding: 8px 16px;
@@ -74,14 +45,6 @@
       cursor: pointer;
       font-weight: bold;
       font-size: 0.9rem;
-      transition: opacity 0.2s, transform 0.1s;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .btn:active {
-      transform: scale(0.98);
     }
 
     .btn:hover {
@@ -90,24 +53,6 @@
 
     .btn-secondary {
       background-color: #444;
-    }
-
-    .btn-google {
-      background-color: #4285f4;
-    }
-
-    /* 同期状態インジケータ */
-    .sync-banner {
-      background-color: #263238;
-      border-left: 4px solid #00bcd4;
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      margin-bottom: 20px;
-      color: #b0bec5;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
 
     /* 機種選択エリア */
@@ -120,8 +65,8 @@
 
     .game-btn {
       flex: 1;
-      min-width: 90px;
-      padding: 12px 8px;
+      min-width: 100px;
+      padding: 14px 8px;
       background-color: var(--card-bg);
       border: 2px solid #333;
       border-radius: 8px;
@@ -133,7 +78,7 @@
     }
 
     .game-btn.active {
-      border-color: var(--primary-color);
+      border-color: #2979ff;
       background-color: #1a237e;
     }
 
@@ -149,7 +94,7 @@
 
     .game-title-bar h2 {
       margin: 0;
-      font-size: 1.2rem;
+      font-size: 1.25rem;
     }
 
     /* 目標ランク別のグループ */
@@ -184,7 +129,6 @@
       flex-direction: column;
       cursor: grab;
       touch-action: manipulation;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
 
     .song-card.dragging {
@@ -213,26 +157,25 @@
     .diff-advanced { border: 3px solid #ffeb3b; }
     .diff-basic { border: 3px solid #4caf50; }
     .diff-lunatic { border: 3px solid #ffffff; }
-    .diff-ultima { border: 3px solid #800000; }
+    .diff-ultima { border: 3px solid #b71c1c; }
     .diff-remaster { border: 3px solid #e0e0e0; }
 
-    /* 定数バッジ（右下に配置） */
+    /* 定数バッジ（右端に配置） */
     .const-badge {
       position: absolute;
       bottom: 4px;
       right: 4px;
-      background-color: rgba(0, 0, 0, 0.8);
+      background-color: rgba(0, 0, 0, 0.75);
       color: #fff;
       font-size: 0.75rem;
       font-weight: bold;
-      padding: 2px 6px;
+      padding: 2px 5px;
       border-radius: 4px;
-      letter-spacing: 0.5px;
     }
 
     /* 達成状態（チェックマーク） */
     .song-card.completed .jacket-img {
-      filter: brightness(0.35);
+      filter: brightness(0.4);
     }
 
     .checkmark {
@@ -245,7 +188,7 @@
       color: var(--accent-color);
       font-weight: bold;
       pointer-events: none;
-      text-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+      text-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
     }
 
     .song-card.completed .checkmark {
@@ -282,11 +225,10 @@
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.7);
       z-index: 1000;
       justify-content: center;
       align-items: center;
-      backdrop-filter: blur(2px);
     }
 
     .modal-overlay.active {
@@ -302,11 +244,11 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
 
     .modal-content h3 {
-      margin: 0 0 4px 0;
+      margin: 0 0 8px 0;
     }
 
     .form-group {
@@ -321,12 +263,11 @@
     }
 
     .form-group input, .form-group select {
-      padding: 8px 12px;
-      border-radius: 6px;
+      padding: 8px;
+      border-radius: 4px;
       border: 1px solid #444;
       background-color: #2a2a2a;
       color: #fff;
-      font-size: 0.95rem;
     }
 
     .modal-actions {
@@ -343,14 +284,6 @@
   <!-- ヘッダー -->
   <div class="header-area">
     <h1>課題曲メモ</h1>
-    <div class="user-section" id="userSection">
-      <button class="btn btn-google" id="loginBtn">Googleでログイン</button>
-    </div>
-  </div>
-
-  <!-- 同期ステータス案内バー -->
-  <div class="sync-banner" id="syncBanner">
-    <span id="syncStatusText">ローカルモード（ログインするとPC・スマホ間で自動同期されます）</span>
   </div>
 
   <!-- 機種選択ボタン -->
@@ -406,35 +339,10 @@
     </div>
   </div>
 
-  <!-- Firebase SDK Imports -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // Global Fallback Configuration
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'music-game-memo';
-    const firebaseConfig = {
-  apiKey: "AIzaSyDL3y35BUpa5PJnnPNzcBGdS3zETRQETFE",
-  authDomain: "music-game-memo.firebaseapp.com",
-  projectId: "music-game-memo",
-  storageBucket: "music-game-memo.firebasestorage.app",
-  messagingSenderId: "561235226598",
-  appId: "1:561235226598:web:498e79bb53facb9fe6b027",
-  measurementId: "G-F9Q6B4X347"
-};
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    let currentUser = null;
-    let unsubscribeFirestore = null;
-    const LOCAL_STORAGE_KEY = 'my_game_challenge_songs_v4';
+  <script>
+    const STORAGE_KEY = 'my_game_challenge_songs_local_v1';
     let currentGame = 'ongeki';
-    let appData = { ongeki: [], chunithm: [], maimai: [] };
 
-    // 各ゲームの設定定数
     const GAME_CONFIG = {
       ongeki: {
         name: 'オンゲキ',
@@ -485,113 +393,25 @@
       }
     };
 
-    // データの保存
-    async function saveData() {
-      // 1. ローカルに保存
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
-
-      // 2. ログイン済みなら Firestore クラウドに同期
-      if (currentUser && !currentUser.isAnonymous) {
-        try {
-          const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'songMemoData', 'mainDoc');
-          await setDoc(docRef, appData);
-        } catch (err) {
-          console.error("Firestore sync error:", err);
-        }
-      }
+    function loadAllData() {
+      const data = localStorage.getItem(STORAGE_KEY);
+      return data ? JSON.parse(data) : { ongeki: [], chunithm: [], maimai: [] };
     }
 
-    // データの読み込み
-    function loadLocalData() {
-      const data = localStorage.getItem(LOCAL_STORAGE_KEY);
-      appData = data ? JSON.parse(data) : { ongeki: [], chunithm: [], maimai: [] };
-      renderList();
+    function saveAllData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
-    // Firestoreからのリアルタイム同期設定
-    function setupFirestoreSync(userId) {
-      if (unsubscribeFirestore) unsubscribeFirestore();
-
-      const docRef = doc(db, 'artifacts', appId, 'users', userId, 'songMemoData', 'mainDoc');
-      unsubscribeFirestore = onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-          appData = docSnap.data();
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
-          renderList();
-        } else {
-          // 初期ドキュメントが存在しない場合はローカルデータをクラウドにアップロード
-          saveData();
-        }
-      }, (error) => {
-        console.error("Firestore error:", error);
-      });
-    }
-
-    // 認証状態の監視と初期化
-    async function initAuth() {
-      // カスタムトークンがある場合は使用
-      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-        try {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } catch (e) {
-          console.warn("Custom token failed:", e);
-        }
-      }
-
-      onAuthStateChanged(auth, (user) => {
-        currentUser = user;
-        const userSection = document.getElementById('userSection');
-        const syncText = document.getElementById('syncStatusText');
-
-        if (user && !user.isAnonymous) {
-          // ログイン状態UI更新
-          userSection.innerHTML = `
-            <div class="user-info">
-              <img src="${user.photoURL || 'https://placehold.co/32x32/1a237e/ffffff?text=U'}" class="user-avatar" alt="Avatar">
-              <span>${user.displayName || 'ユーザー'}</span>
-            </div>
-            <button class="btn btn-secondary" id="logoutBtn">ログアウト</button>
-          `;
-          syncText.textContent = `☁️ 同期完了: ${user.email || user.displayName} としてアクセス中`;
-          document.getElementById('logoutBtn').onclick = () => signOut(auth);
-
-          // クラウド同期を開始
-          setupFirestoreSync(user.uid);
-        } else {
-          // 未ログイン状態UI更新
-          userSection.innerHTML = `<button class="btn btn-google" id="loginBtn">Googleでログイン</button>`;
-          syncText.textContent = `ローカルモード (GoogleログインでPC・スマホ同期可能)`;
-          document.getElementById('loginBtn').onclick = loginWithGoogle;
-
-          if (unsubscribeFirestore) unsubscribeFirestore();
-          loadLocalData();
-        }
-      });
-    }
-
-    // Google ログイン処理
-    async function loginWithGoogle() {
-      const provider = new GoogleAuthProvider();
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (err) {
-        console.error("Login Error:", err);
-        alert("ログインに失敗しました: " + err.message);
-      }
-    }
-
-    // 機種切り替え
-    window.switchGame = function(gameKey) {
+    function switchGame(gameKey) {
       currentGame = gameKey;
       document.querySelectorAll('.game-btn').forEach((btn, idx) => {
         btn.classList.toggle('active', ['ongeki', 'chunithm', 'maimai'][idx] === gameKey);
       });
       document.getElementById('currentGameTitle').textContent = `${GAME_CONFIG[gameKey].name}課題曲`;
       renderList();
-    };
+    }
 
-    // 追加モーダルを開く
-    window.openAddModal = function() {
+    function openAddModal() {
       const config = GAME_CONFIG[currentGame];
       const targetArea = document.getElementById('targetFormArea');
       targetArea.innerHTML = '';
@@ -615,14 +435,13 @@
       }
 
       document.getElementById('addModal').classList.add('active');
-    };
+    }
 
-    window.closeAddModal = function() {
+    function closeAddModal() {
       document.getElementById('addModal').classList.remove('active');
-    };
+    }
 
-    // 楽曲追加処理
-    window.addSong = function() {
+    function addSong() {
       const title = document.getElementById('songTitle').value.trim();
       const difficulty = document.getElementById('difficulty').value;
       const constant = parseFloat(document.getElementById('constant').value);
@@ -649,7 +468,8 @@
       const file = imageInput.files[0];
       const reader = new FileReader();
       reader.onload = function (e) {
-        const songs = appData[currentGame] || [];
+        const allData = loadAllData();
+        const songs = allData[currentGame];
 
         const newSong = {
           id: Date.now(),
@@ -662,7 +482,7 @@
           isCompleted: false
         };
 
-        // 高定数順で適切な位置に割り込ませる
+        // 同じ目標グループ内で定数が自分より小さいものの前に挿入
         let insertIndex = -1;
         for (let i = 0; i < songs.length; i++) {
           if (songs[i].targetLabel === targetLabel) {
@@ -679,8 +499,7 @@
           songs.push(newSong);
         }
 
-        appData[currentGame] = songs;
-        saveData();
+        saveAllData(allData);
 
         document.getElementById('songTitle').value = '';
         document.getElementById('jacketImage').value = '';
@@ -688,27 +507,26 @@
         renderList();
       };
       reader.readAsDataURL(file);
-    };
+    }
 
-    // 達成（トグル）
-    window.toggleComplete = function(id) {
-      const song = appData[currentGame].find(s => s.id === id);
+    function toggleComplete(id) {
+      const allData = loadAllData();
+      const song = allData[currentGame].find(s => s.id === id);
       if (song) {
         song.isCompleted = !song.isCompleted;
-        saveData();
+        saveAllData(allData);
         renderList();
       }
-    };
+    }
 
-    // 削除
-    window.deleteSong = function(id) {
+    function deleteSong(id) {
       if (!confirm('削除しますか？')) return;
-      appData[currentGame] = appData[currentGame].filter(s => s.id !== id);
-      saveData();
+      const allData = loadAllData();
+      allData[currentGame] = allData[currentGame].filter(s => s.id !== id);
+      saveAllData(allData);
       renderList();
-    };
+    }
 
-    // ソート順計算（クリアランク優先 ＞ スコアランク ＞ Pスコア/でらっくすスコア）
     function getGroupPriority(targetLabel, songsInGroup) {
       const sample = songsInGroup[0];
       const obj = sample.targetObj || {};
@@ -733,9 +551,9 @@
       return clearVal + scoreVal;
     }
 
-    // 描画処理
     function renderList() {
-      const songs = appData[currentGame] || [];
+      const allData = loadAllData();
+      const songs = allData[currentGame] || [];
       const container = document.getElementById('listContainer');
       container.innerHTML = '';
 
@@ -768,6 +586,7 @@
 
         const grid = document.createElement('div');
         grid.className = 'song-grid';
+        grid.dataset.targetLabel = targetLabel;
 
         songList.forEach(song => {
           const diffConfig = config.difficulties.find(d => d.name === song.difficulty) || { class: '' };
@@ -799,7 +618,6 @@
       });
     }
 
-    // ドラッグ＆ドロップ実装
     let draggedItem = null;
 
     function setupDragAndDrop(card) {
@@ -845,7 +663,8 @@
     }
 
     function updateOrderFromDOM() {
-      const currentSongs = appData[currentGame];
+      const allData = loadAllData();
+      const currentSongs = allData[currentGame];
       const newOrderedSongs = [];
 
       document.querySelectorAll('.song-card').forEach(card => {
@@ -854,12 +673,11 @@
         if (song) newOrderedSongs.push(song);
       });
 
-      appData[currentGame] = newOrderedSongs;
-      saveData();
+      allData[currentGame] = newOrderedSongs;
+      saveAllData(allData);
     }
 
-    // 初期起動
-    initAuth();
+    renderList();
   </script>
 </body>
 </html>
