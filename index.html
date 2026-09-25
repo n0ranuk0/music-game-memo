@@ -2,8 +2,8 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>課題曲メモ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ゲキチュウマイメモ</title>
   <style>
     :root {
       --bg-color: #121212;
@@ -11,6 +11,7 @@
       --text-color: #ffffff;
       --accent-color: #00e676;
       --danger-color: #ff5252;
+      --gold-color: #ffd700;
     }
 
     body {
@@ -40,7 +41,7 @@
       background-color: #2979ff;
       color: #fff;
       border: none;
-      padding: 6px 12px;
+      padding: 8px 14px;
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
@@ -53,6 +54,11 @@
 
     .btn-secondary {
       background-color: #444;
+    }
+
+    .btn-danger {
+      background-color: var(--danger-color);
+      color: #fff;
     }
 
     .btn-sm {
@@ -108,6 +114,13 @@
       background-color: rgba(255, 255, 255, 0.02);
       border-radius: 8px;
       padding: 8px;
+      border: 1px solid transparent;
+      transition: border-color 0.2s;
+    }
+
+    .target-group.drag-over-group {
+      border-color: #2979ff;
+      background-color: rgba(41, 121, 255, 0.05);
     }
 
     .target-group-header {
@@ -143,12 +156,12 @@
       color: var(--danger-color);
     }
 
-    /* グリッドレイアウト（スマホ対応：自動改行） */
+    /* グリッドレイアウト */
     .song-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
       gap: 8px;
-      min-height: 40px;
+      min-height: 50px;
     }
 
     /* カードデザイン */
@@ -157,8 +170,7 @@
       border-radius: 6px;
       overflow: hidden;
       position: relative;
-      display: flex;
-      flex-direction: column;
+      aspect-ratio: 1 / 1;
       cursor: grab;
       touch-action: manipulation;
     }
@@ -169,7 +181,7 @@
 
     .jacket-wrapper {
       width: 100%;
-      aspect-ratio: 1 / 1;
+      height: 100%;
       position: relative;
       cursor: pointer;
       box-sizing: border-box;
@@ -184,22 +196,42 @@
     }
 
     /* 難易度別の枠線カラー */
-    .diff-master { border: 3px solid #9c27b0; }
-    .diff-expert { border: 3px solid #f44336; }
-    .diff-advanced { border: 3px solid #ffeb3b; }
-    .diff-basic { border: 3px solid #4caf50; }
-    .diff-lunatic { border: 3px solid #ffffff; }
-    .diff-ultima { border: 3px solid #b71c1c; }
-    .diff-remaster { border: 3px solid #e0e0e0; }
+    .diff-master { border: 4px solid #9c27b0; }
+    .diff-expert { border: 4px solid #f44336; }
+    .diff-advanced { border: 4px solid #ffeb3b; }
+    .diff-basic { border: 4px solid #4caf50; }
+    .diff-lunatic { border: 4px solid #ffffff; }
+    .diff-remaster { border: 4px solid #e0e0e0; }
+    
+    /* オンゲキ Re:MASTER: ほんのり黒い青 */
+    .diff-ongeki-remaster { border: 4px solid #00a2ff; }
 
-    /* 定数バッジ */
+    /* チュウニズム ULTIMA: 赤と黒の縞模様 */
+    .diff-ultima {
+      border: 4px solid transparent;
+      border-image: repeating-linear-gradient(
+        135deg,
+        #d32f2f,
+        #d32f2f 6px,
+        #121212 6px,
+        #121212 12px
+      ) 1;
+    }
+
+    /* チュウニズム WORLD'S END: 虹色 */
+    .diff-worlds-end { border: 4px solid transparent; border-image: linear-gradient(45deg, red, orange, yellow, green, cyan, blue, violet) 1; }
+
+    /* maimai 宴: 桃 */
+    .diff-utaage { border: 4px solid #ff69b4; }
+
+    /* 定数バッジ (文字色ゴールド) */
     .const-badge {
       position: absolute;
       bottom: 2px;
       right: 2px;
-      background-color: rgba(0, 0, 0, 0.8);
-      color: #fff;
-      font-size: 0.65rem;
+      background-color: rgba(0, 0, 0, 0.85);
+      color: var(--gold-color);
+      font-size: 0.7rem;
       font-weight: bold;
       padding: 1px 4px;
       border-radius: 3px;
@@ -225,31 +257,6 @@
 
     .song-card.completed .checkmark {
       display: block;
-    }
-
-    .song-info {
-      padding: 4px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .song-title {
-      font-size: 0.7rem;
-      font-weight: bold;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .delete-btn {
-      background: none;
-      border: none;
-      color: var(--danger-color);
-      font-size: 0.65rem;
-      cursor: pointer;
-      text-align: right;
-      padding: 0;
     }
 
     /* モーダル */
@@ -295,13 +302,13 @@
       color: #aaa;
     }
 
-    .form-group input, .form-group select {
-      padding: 7px;
+    .form-group input[type="text"], .form-group select {
+      padding: 8px;
       border-radius: 4px;
       border: 1px solid #444;
       background-color: #2a2a2a;
       color: #fff;
-      font-size: 0.9rem;
+      font-size: 16px;
     }
 
     .modal-actions {
@@ -310,6 +317,15 @@
       gap: 8px;
       margin-top: 6px;
     }
+
+    .preview-jacket {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin: 0 auto;
+      display: block;
+    }
   </style>
 </head>
 
@@ -317,7 +333,7 @@
 
   <!-- ヘッダー -->
   <div class="header-area">
-    <h1>課題曲メモ</h1>
+    <h1>ゲキチュウマイメモ</h1>
   </div>
 
   <!-- 機種選択ボタン -->
@@ -357,23 +373,18 @@
       <input type="hidden" id="activeTargetLabel">
 
       <div class="form-group">
-        <label for="songTitle">曲名 (手入力)</label>
-        <input type="text" id="songTitle" placeholder="例: 曲名">
+        <label for="jacketImage">ジャケット画像 (必須)</label>
+        <input type="file" id="jacketImage" accept="image/*">
       </div>
 
       <div class="form-group">
-        <label for="difficulty">難易度</label>
+        <label for="difficulty">難易度 (必須)</label>
         <select id="difficulty"></select>
       </div>
 
       <div class="form-group">
-        <label for="constant">定数</label>
+        <label for="constant">定数 (任意)</label>
         <select id="constant"></select>
-      </div>
-
-      <div class="form-group">
-        <label for="jacketImage">ジャケット画像 (1:1)</label>
-        <input type="file" id="jacketImage" accept="image/*">
       </div>
 
       <div class="modal-actions">
@@ -383,11 +394,40 @@
     </div>
   </div>
 
+  <!-- 3. 楽曲編集モーダル (長押しで起動) -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-content">
+      <h3>楽曲情報の編集</h3>
+      <input type="hidden" id="editSongId">
+
+      <div class="form-group" style="text-align: center;">
+        <img id="editJacketPreview" class="preview-jacket" alt="ジャケット">
+      </div>
+
+      <div class="form-group">
+        <label for="editDifficulty">難易度</label>
+        <select id="editDifficulty"></select>
+      </div>
+
+      <div class="form-group">
+        <label for="editConstant">定数</label>
+        <select id="editConstant"></select>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-danger" style="margin-right: auto;" onclick="deleteSongFromEdit()">削除</button>
+        <button class="btn btn-secondary" onclick="closeEditModal()">キャンセル</button>
+        <button class="btn" onclick="saveEditedSong()">保存</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    const STORAGE_KEY = 'my_game_challenge_songs_local_v4';
+    // 定義ステートメントによるコメント記述
+    const STORAGE_KEY = 'my_game_challenge_songs_local_v8';
     let currentGame = 'ongeki';
 
-    // 機種ごとのマスター設定
+    // 機種別設定データ
     const GAME_CONFIG = {
       ongeki: {
         name: 'オンゲキ',
@@ -401,7 +441,8 @@
           { name: 'EXPERT', class: 'diff-expert' },
           { name: 'ADVANCED', class: 'diff-advanced' },
           { name: 'BASIC', class: 'diff-basic' },
-          { name: 'LUNATIC', class: 'diff-lunatic' }
+          { name: 'LUNATIC', class: 'diff-lunatic' },
+          { name: 'Re:MASTER', class: 'diff-ongeki-remaster' }
         ],
         defaultDiff: 'MASTER',
         maxConst: 15.7, minConst: 1.0
@@ -417,7 +458,8 @@
           { name: 'EXPERT', class: 'diff-expert' },
           { name: 'ADVANCED', class: 'diff-advanced' },
           { name: 'BASIC', class: 'diff-basic' },
-          { name: 'ULTIMA', class: 'diff-ultima' }
+          { name: 'ULTIMA', class: 'diff-ultima' },
+          { name: "WORLD'S END", class: 'diff-worlds-end' }
         ],
         defaultDiff: 'MASTER',
         maxConst: 16.0, minConst: 1.0
@@ -434,13 +476,15 @@
           { name: 'EXPERT', class: 'diff-expert' },
           { name: 'ADVANCED', class: 'diff-advanced' },
           { name: 'BASIC', class: 'diff-basic' },
-          { name: 'RE:MASTER', class: 'diff-remaster' }
+          { name: 'Re:MASTER', class: 'diff-remaster' },
+          { name: '宴', class: 'diff-utaage' }
         ],
         defaultDiff: 'MASTER',
         maxConst: 15.0, minConst: 1.0
       }
     };
 
+    // 全データの読み込み
     function loadAllData() {
       const data = localStorage.getItem(STORAGE_KEY);
       return data ? JSON.parse(data) : {
@@ -450,10 +494,12 @@
       };
     }
 
+    // 全データの保存
     function saveAllData(data) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
+    // 機種切替処理
     function switchGame(gameKey) {
       currentGame = gameKey;
       document.querySelectorAll('.game-btn').forEach((btn, idx) => {
@@ -463,7 +509,7 @@
       renderList();
     }
 
-    /* --- 項目（目標グループ）の追加モーダル --- */
+    // 項目追加モーダルの表示
     function openTargetModal() {
       const config = GAME_CONFIG[currentGame];
       const targetArea = document.getElementById('targetFormArea');
@@ -479,10 +525,12 @@
       document.getElementById('targetModal').classList.add('active');
     }
 
+    // 項目追加モーダルの非表示
     function closeTargetModal() {
       document.getElementById('targetModal').classList.remove('active');
     }
 
+    // 項目グループの追加
     function addTargetGroup() {
       const config = GAME_CONFIG[currentGame];
       const targetObj = {};
@@ -504,10 +552,7 @@
       const gameData = allData[currentGame] || { targets: [], songs: [] };
 
       if (!gameData.targets.some(t => t.label === targetLabel)) {
-        gameData.targets.push({
-          label: targetLabel,
-          targetObj: targetObj
-        });
+        gameData.targets.push({ label: targetLabel, targetObj: targetObj });
         allData[currentGame] = gameData;
         saveAllData(allData);
       }
@@ -516,6 +561,7 @@
       renderList();
     }
 
+    // 項目グループの削除
     function deleteTargetGroup(targetLabel) {
       if (!confirm(`「${targetLabel}」の項目と登録されている楽曲を削除しますか？`)) return;
       const allData = loadAllData();
@@ -529,21 +575,19 @@
       renderList();
     }
 
-    /* --- 楽曲追加モーダル --- */
+    // 楽曲追加モーダルの表示
     function openSongModal(targetLabel) {
       const config = GAME_CONFIG[currentGame];
       document.getElementById('activeTargetLabel').value = targetLabel;
       document.getElementById('songModalTitle').textContent = `楽曲追加 (${targetLabel})`;
 
-      // 難易度プルダウン（MASTER初期選択）
       const diffSelect = document.getElementById('difficulty');
       diffSelect.innerHTML = config.difficulties.map(d => 
         `<option value="${d.name}" ${d.name === config.defaultDiff ? 'selected' : ''}>${d.name}</option>`
       ).join('');
 
-      // 定数プルダウン
       const constSelect = document.getElementById('constant');
-      constSelect.innerHTML = '';
+      constSelect.innerHTML = '<option value="">なし</option>';
       for (let v = config.maxConst; v >= config.minConst; v = (v - 0.1).toFixed(1)) {
         const valStr = parseFloat(v).toFixed(1);
         constSelect.innerHTML += `<option value="${valStr}">${valStr}</option>`;
@@ -552,18 +596,19 @@
       document.getElementById('songModal').classList.add('active');
     }
 
+    // 楽曲追加モーダルの非表示
     function closeSongModal() {
       document.getElementById('songModal').classList.remove('active');
     }
 
+    // 楽曲の追加
     function addSong() {
       const targetLabel = document.getElementById('activeTargetLabel').value;
-      const title = document.getElementById('songTitle').value.trim();
       const difficulty = document.getElementById('difficulty').value;
-      const constant = parseFloat(document.getElementById('constant').value);
+      const constVal = document.getElementById('constant').value;
+      const constant = constVal !== '' ? parseFloat(constVal) : null;
       const imageInput = document.getElementById('jacketImage');
 
-      if (!title) return alert('曲名を入力してください');
       if (imageInput.files.length === 0) return alert('ジャケット画像を選択してください');
 
       const file = imageInput.files[0];
@@ -574,7 +619,6 @@
 
         const newSong = {
           id: Date.now(),
-          title: title,
           targetLabel: targetLabel,
           difficulty: difficulty,
           constant: constant,
@@ -582,13 +626,14 @@
           isCompleted: false
         };
 
-        // 同じ目標グループ内で定数が自分より小さい楽曲の直前（左側）に挿入
         let insertIndex = -1;
-        for (let i = 0; i < songs.length; i++) {
-          if (songs[i].targetLabel === targetLabel) {
-            if (songs[i].constant < constant) {
-              insertIndex = i;
-              break;
+        if (constant !== null) {
+          for (let i = 0; i < songs.length; i++) {
+            if (songs[i].targetLabel === targetLabel && songs[i].constant !== null) {
+              if (songs[i].constant < constant) {
+                insertIndex = i;
+                break;
+              }
             }
           }
         }
@@ -601,7 +646,6 @@
 
         saveAllData(allData);
 
-        document.getElementById('songTitle').value = '';
         document.getElementById('jacketImage').value = '';
         closeSongModal();
         renderList();
@@ -609,6 +653,68 @@
       reader.readAsDataURL(file);
     }
 
+    // 編集モーダルの表示
+    function openEditModal(songId) {
+      const allData = loadAllData();
+      const song = allData[currentGame].songs.find(s => s.id === songId);
+      if (!song) return;
+
+      const config = GAME_CONFIG[currentGame];
+
+      document.getElementById('editSongId').value = song.id;
+      document.getElementById('editJacketPreview').src = song.image;
+
+      const diffSelect = document.getElementById('editDifficulty');
+      diffSelect.innerHTML = config.difficulties.map(d => 
+        `<option value="${d.name}" ${d.name === song.difficulty ? 'selected' : ''}>${d.name}</option>`
+      ).join('');
+
+      const constSelect = document.getElementById('editConstant');
+      constSelect.innerHTML = '<option value="">なし</option>';
+      for (let v = config.maxConst; v >= config.minConst; v = (v - 0.1).toFixed(1)) {
+        const valStr = parseFloat(v).toFixed(1);
+        const selected = (song.constant !== null && parseFloat(valStr) === parseFloat(song.constant)) ? 'selected' : '';
+        constSelect.innerHTML += `<option value="${valStr}" ${selected}>${valStr}</option>`;
+      }
+
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    // 編集モーダルの非表示
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('active');
+    }
+
+    // 編集データの保存
+    function saveEditedSong() {
+      const songId = Number(document.getElementById('editSongId').value);
+      const difficulty = document.getElementById('editDifficulty').value;
+      const constVal = document.getElementById('editConstant').value;
+      const constant = constVal !== '' ? parseFloat(constVal) : null;
+
+      const allData = loadAllData();
+      const song = allData[currentGame].songs.find(s => s.id === songId);
+      if (song) {
+        song.difficulty = difficulty;
+        song.constant = constant;
+        saveAllData(allData);
+        closeEditModal();
+        renderList();
+      }
+    }
+
+    // 編集モーダル経由での楽曲削除
+    function deleteSongFromEdit() {
+      const songId = Number(document.getElementById('editSongId').value);
+      if (!confirm('この楽曲を削除しますか？')) return;
+      const allData = loadAllData();
+      allData[currentGame].songs = allData[currentGame].songs.filter(s => s.id !== songId);
+      saveAllData(allData);
+      closeEditModal();
+      renderList();
+    }
+
+    // 完了フラグの切替
     function toggleComplete(id) {
       const allData = loadAllData();
       const song = allData[currentGame].songs.find(s => s.id === id);
@@ -619,22 +725,12 @@
       }
     }
 
-    function deleteSong(id) {
-      if (!confirm('この楽曲を削除しますか？')) return;
-      const allData = loadAllData();
-      allData[currentGame].songs = allData[currentGame].songs.filter(s => s.id !== id);
-      saveAllData(allData);
-      renderList();
-    }
-
-    // 目標グループ優先度
+    // グループ優先度の取得
     function getGroupPriority(targetObj) {
       const obj = targetObj || {};
       if ((obj.pscore || obj.dscore) && !obj.clear && !obj.score) return -1000;
 
-      let scoreVal = 0;
-      let clearVal = 0;
-
+      let scoreVal = 0, clearVal = 0;
       if (obj.clear) {
         const options = ['FC', 'AB', 'AB+', 'AJ', 'AJC', 'AP', 'AP+'];
         clearVal = (options.indexOf(obj.clear) + 1) * 1000;
@@ -646,7 +742,7 @@
       return clearVal + scoreVal;
     }
 
-    /* 描画処理 */
+    // 画面再描画処理
     function renderList() {
       const allData = loadAllData();
       const gameData = allData[currentGame] || { targets: [], songs: [] };
@@ -658,7 +754,6 @@
         return;
       }
 
-      // 優先度ソート
       const sortedTargets = [...gameData.targets].sort((a, b) => {
         return getGroupPriority(b.targetObj) - getGroupPriority(a.targetObj);
       });
@@ -671,6 +766,7 @@
 
         const groupDiv = document.createElement('div');
         groupDiv.className = 'target-group';
+        groupDiv.dataset.targetLabel = targetLabel;
 
         const header = document.createElement('div');
         header.className = 'target-group-header';
@@ -695,33 +791,109 @@
           card.draggable = true;
           card.dataset.id = song.id;
 
+          const constBadgeHtml = (song.constant !== null && song.constant !== undefined) 
+            ? `<div class="const-badge">${Number(song.constant).toFixed(1)}</div>` 
+            : '';
+
           card.innerHTML = `
-            <div class="jacket-wrapper ${diffConfig.class}" onclick="toggleComplete(${song.id})">
-              <img src="${song.image}" class="jacket-img" alt="${song.title}">
-              <div class="const-badge">${Number(song.constant).toFixed(1)}</div>
+            <div class="jacket-wrapper ${diffConfig.class}">
+              <img src="${song.image}" class="jacket-img" alt="">
+              ${constBadgeHtml}
               <div class="checkmark">✓</div>
-            </div>
-            <div class="song-info">
-              <div class="song-title" title="${song.title}">${song.title}</div>
-              <button class="delete-btn" onclick="deleteSong(${song.id})">削除</button>
             </div>
           `;
 
-          setupDragAndDrop(card);
+          const jacketWrapper = card.querySelector('.jacket-wrapper');
+          setupJacketTouchEvents(jacketWrapper, song.id);
+          setupDragAndDrop(card, jacketWrapper);
           grid.appendChild(card);
         });
 
-        setupGridDropZone(grid);
+        setupGroupDropZone(groupDiv);
         groupDiv.appendChild(grid);
         container.appendChild(groupDiv);
       });
     }
 
-    /* ドラッグ＆ドロップ */
+    // 長押し判定 (1秒)
+    let globalActiveCancelTimer = null;
+
+    function setupJacketTouchEvents(element, songId) {
+      let pressTimer = null;
+      let isLongPress = false;
+      let startX = 0, startY = 0;
+
+      const cancelPress = () => {
+        if (pressTimer) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      };
+
+      element._cancelPress = cancelPress;
+
+      const startPress = (e) => {
+        isLongPress = false;
+        cancelPress();
+
+        if (e.touches && e.touches.length > 0) {
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+        } else {
+          startX = e.clientX;
+          startY = e.clientY;
+        }
+
+        globalActiveCancelTimer = cancelPress;
+
+        pressTimer = setTimeout(() => {
+          isLongPress = true;
+          openEditModal(songId);
+        }, 750);
+      };
+
+      const movePress = (e) => {
+        if (!pressTimer) return;
+        let currentX = 0, currentY = 0;
+        if (e.touches && e.touches.length > 0) {
+          currentX = e.touches[0].clientX;
+          currentY = e.touches[0].clientY;
+        } else {
+          currentX = e.clientX;
+          currentY = e.clientY;
+        }
+
+        if (Math.hypot(currentX - startX, currentY - startY) > 5) {
+          cancelPress();
+        }
+      };
+
+      const endPress = (e) => {
+        cancelPress();
+        if (!isLongPress) {
+          toggleComplete(songId);
+        }
+      };
+
+      element.addEventListener('mousedown', startPress);
+      element.addEventListener('mousemove', movePress);
+      element.addEventListener('mouseup', endPress);
+      element.addEventListener('mouseleave', cancelPress);
+
+      element.addEventListener('touchstart', startPress, { passive: true });
+      element.addEventListener('touchmove', movePress, { passive: true });
+      element.addEventListener('touchend', endPress);
+      element.addEventListener('touchcancel', cancelPress);
+    }
+
+    // ドラッグ＆ドロップ制御
     let draggedItem = null;
 
-    function setupDragAndDrop(card) {
+    function setupDragAndDrop(card, jacketWrapper) {
       card.addEventListener('dragstart', () => {
+        if (jacketWrapper._cancelPress) jacketWrapper._cancelPress();
+        if (globalActiveCancelTimer) globalActiveCancelTimer();
+
         draggedItem = card;
         setTimeout(() => card.classList.add('dragging'), 0);
       });
@@ -733,15 +905,25 @@
       });
     }
 
-    function setupGridDropZone(grid) {
-      grid.addEventListener('dragover', (e) => {
+    function setupGroupDropZone(groupDiv) {
+      groupDiv.addEventListener('dragover', (e) => {
         e.preventDefault();
+        groupDiv.classList.add('drag-over-group');
+        const grid = groupDiv.querySelector('.song-grid');
         const afterElement = getDragAfterElement(grid, e.clientX, e.clientY);
         if (afterElement == null) {
           grid.appendChild(draggedItem);
         } else {
           grid.insertBefore(draggedItem, afterElement);
         }
+      });
+
+      groupDiv.addEventListener('dragleave', () => {
+        groupDiv.classList.remove('drag-over-group');
+      });
+
+      groupDiv.addEventListener('drop', () => {
+        groupDiv.classList.remove('drag-over-group');
       });
     }
 
@@ -767,10 +949,16 @@
       const currentSongs = allData[currentGame].songs;
       const newOrderedSongs = [];
 
-      document.querySelectorAll('.song-card').forEach(card => {
-        const id = Number(card.dataset.id);
-        const song = currentSongs.find(s => s.id === id);
-        if (song) newOrderedSongs.push(song);
+      document.querySelectorAll('.target-group').forEach(groupDiv => {
+        const targetLabel = groupDiv.dataset.targetLabel;
+        groupDiv.querySelectorAll('.song-card').forEach(card => {
+          const id = Number(card.dataset.id);
+          const song = currentSongs.find(s => s.id === id);
+          if (song) {
+            song.targetLabel = targetLabel;
+            newOrderedSongs.push(song);
+          }
+        });
       });
 
       allData[currentGame].songs = newOrderedSongs;
