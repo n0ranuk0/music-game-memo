@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>課題曲メモ</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --text-color: #ffffff;
+      --accent-color: #00e676;
+      --danger-color: #ff5252;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 16px;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* ヘッダーエリア */
+    .header-area {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .header-area h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .btn {
+      background-color: #2979ff;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn-secondary {
+      background-color: #444;
+    }
+
+    /* 機種選択エリア */
+    .game-select-container {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .game-btn {
+      flex: 1;
+      min-width: 100px;
+      padding: 14px 8px;
+      background-color: var(--card-bg);
+      border: 2px solid #333;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .game-btn.active {
+      border-color: #2979ff;
+      background-color: #1a237e;
+    }
+
+    /* 課題曲エリア */
+    .game-title-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #333;
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+    }
+
+    .game-title-bar h2 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    /* 目標ランク別のグループ */
+    .target-group {
+      margin-bottom: 28px;
+    }
+
+    .target-group-header {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #00bcd4;
+      border-bottom: 1px solid #333;
+      padding-bottom: 4px;
+      margin-bottom: 12px;
+    }
+
+    /* グリッドレイアウト */
+    .song-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 12px;
+      min-height: 50px;
+    }
+
+    /* カードデザイン */
+    .song-card {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      cursor: grab;
+      touch-action: manipulation;
+    }
+
+    .song-card.dragging {
+      opacity: 0.4;
+    }
+
+    .jacket-wrapper {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      position: relative;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+
+    .jacket-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: filter 0.2s ease;
+    }
+
+    /* 難易度別の枠線カラー */
+    .diff-master { border: 3px solid #9c27b0; }
+    .diff-expert { border: 3px solid #f44336; }
+    .diff-advanced { border: 3px solid #ffeb3b; }
+    .diff-basic { border: 3px solid #4caf50; }
+    .diff-lunatic { border: 3px solid #ffffff; }
+    .diff-ultima { border: 3px solid #b71c1c; }
+    .diff-remaster { border: 3px solid #e0e0e0; }
+
+    /* 定数バッジ（右端に配置） */
+    .const-badge {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background-color: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    /* 達成状態（チェックマーク） */
+    .song-card.completed .jacket-img {
+      filter: brightness(0.4);
+    }
+
+    .checkmark {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2.5rem;
+      color: var(--accent-color);
+      font-weight: bold;
+      pointer-events: none;
+      text-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
+    }
+
+    .song-card.completed .checkmark {
+      display: block;
+    }
+
+    .song-info {
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .song-title {
+      font-size: 0.8rem;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: var(--danger-color);
+      font-size: 0.7rem;
+      cursor: pointer;
+      text-align: right;
+      padding: 2px 0 0 0;
+    }
+
+    /* モーダルダイアログ */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background-color: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .modal-content h3 {
+      margin: 0 0 8px 0;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-group label {
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+
+    .form-group input, .form-group select {
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #444;
+      background-color: #2a2a2a;
+      color: #fff;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ヘッダー -->
+  <div class="header-area">
+    <h1>課題曲メモ</h1>
+  </div>
+
+  <!-- 機種選択ボタン -->
+  <div class="game-select-container">
+    <div class="game-btn active" onclick="switchGame('ongeki')">オンゲキ</div>
+    <div class="game-btn" onclick="switchGame('chunithm')">チュウニズム</div>
+    <div class="game-btn" onclick="switchGame('maimai')">maimai</div>
+  </div>
+
+  <!-- 機種ごとの表示領域 -->
+  <div id="mainContent">
+    <div class="game-title-bar">
+      <h2 id="currentGameTitle">オンゲキ課題曲</h2>
+      <button class="btn" onclick="openAddModal()">課題曲追加</button>
+    </div>
+
+    <!-- 課題曲リスト表示場所 -->
+    <div id="listContainer"></div>
+  </div>
+
+  <!-- 課題曲追加モーダル -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal-content">
+      <h3>課題曲を追加</h3>
+      
+      <!-- 目標値フォーム（JavaScriptで動的に切り替え） -->
+      <div id="targetFormArea"></div>
+
+      <div class="form-group">
+        <label for="songTitle">曲名 (手入力)</label>
+        <input type="text" id="songTitle" placeholder="例: 曲名">
+      </div>
+
+      <div class="form-group">
+        <label for="difficulty">難易度</label>
+        <select id="difficulty"></select>
+      </div>
+
+      <div class="form-group">
+        <label for="constant">定数</label>
+        <select id="constant"></select>
+      </div>
+
+      <div class="form-group">
+        <label for="jacketImage">ジャケット画像 (1:1)</label>
+        <input type="file" id="jacketImage" accept="image/*">
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeAddModal()">キャンセル</button>
+        <button class="btn" onclick="addSong()">追加</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'my_game_challenge_songs_v3';
+    let currentGame = 'ongeki';
+
+    const GAME_CONFIG = {
+      ongeki: {
+        name: 'オンゲキ',
+        targets: [
+          { key: 'clear', label: 'クリアランク', options: ['なし', 'AB+', 'AB', 'FC'] },
+          { key: 'score', label: 'スコアランク', options: ['なし', 'SSS+', 'SSS', 'SS', 'S'] },
+          { key: 'pscore', label: 'Pスコア', options: ['なし', '★5(虹)', '★5', '★4', '★3', '★2', '★1'] }
+        ],
+        difficulties: [
+          { name: 'MASTER', class: 'diff-master' },
+          { name: 'EXPERT', class: 'diff-expert' },
+          { name: 'ADVANCED', class: 'diff-advanced' },
+          { name: 'BASIC', class: 'diff-basic' },
+          { name: 'LUNATIC', class: 'diff-lunatic' }
+        ],
+        maxConst: 15.7, minConst: 1.0
+      },
+      chunithm: {
+        name: 'チュウニズム',
+        targets: [
+          { key: 'clear', label: 'クリアランク', options: ['なし', 'AJC', 'AJ', 'FC'] },
+          { key: 'score', label: 'スコアランク', options: ['なし', 'SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S'] }
+        ],
+        difficulties: [
+          { name: 'ULTIMA', class: 'diff-ultima' },
+          { name: 'MASTER', class: 'diff-master' },
+          { name: 'EXPERT', class: 'diff-expert' },
+          { name: 'ADVANCED', class: 'diff-advanced' },
+          { name: 'BASIC', class: 'diff-basic' }
+        ],
+        maxConst: 16.0, minConst: 1.0
+      },
+      maimai: {
+        name: 'maimai',
+        targets: [
+          { key: 'clear', label: 'クリアランク', options: ['なし', 'AP+', 'AP', 'FC'] },
+          { key: 'score', label: 'スコアランク', options: ['なし', 'SSS+', 'SSS', 'SS', 'S'] },
+          { key: 'dscore', label: 'でらっくすスコア', options: ['なし', '★5', '★4', '★3', '★2', '★1'] }
+        ],
+        difficulties: [
+          { name: 'RE:MASTER', class: 'diff-remaster' },
+          { name: 'MASTER', class: 'diff-master' },
+          { name: 'EXPERT', class: 'diff-expert' },
+          { name: 'ADVANCED', class: 'diff-advanced' },
+          { name: 'BASIC', class: 'diff-basic' }
+        ],
+        maxConst: 15.0, minConst: 1.0
+      }
+    };
+
+    function loadAllData() {
+      const data = localStorage.getItem(STORAGE_KEY);
+      return data ? JSON.parse(data) : { ongeki: [], chunithm: [], maimai: [] };
+    }
+
+    function saveAllData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function switchGame(gameKey) {
+      currentGame = gameKey;
+      document.querySelectorAll('.game-btn').forEach((btn, idx) => {
+        btn.classList.toggle('active', ['ongeki', 'chunithm', 'maimai'][idx] === gameKey);
+      });
+      document.getElementById('currentGameTitle').textContent = `${GAME_CONFIG[gameKey].name}課題曲`;
+      renderList();
+    }
+
+    function openAddModal() {
+      const config = GAME_CONFIG[currentGame];
+      const targetArea = document.getElementById('targetFormArea');
+      targetArea.innerHTML = '';
+      config.targets.forEach(t => {
+        const group = document.createElement('div');
+        group.className = 'form-group';
+        group.innerHTML = `<label>${t.label}</label><select id="target_${t.key}">
+          ${t.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+        </select>`;
+        targetArea.appendChild(group);
+      });
+
+      const diffSelect = document.getElementById('difficulty');
+      diffSelect.innerHTML = config.difficulties.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+
+      const constSelect = document.getElementById('constant');
+      constSelect.innerHTML = '';
+      for (let v = config.maxConst; v >= config.minConst; v = (v - 0.1).toFixed(1)) {
+        const valStr = parseFloat(v).toFixed(1);
+        constSelect.innerHTML += `<option value="${valStr}">${valStr}</option>`;
+      }
+
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function closeAddModal() {
+      document.getElementById('addModal').classList.remove('active');
+    }
+
+    // 楽曲の追加（定数の高さに応じた挿入場所の調整）
+    function addSong() {
+      const title = document.getElementById('songTitle').value.trim();
+      const difficulty = document.getElementById('difficulty').value;
+      const constant = parseFloat(document.getElementById('constant').value);
+      const imageInput = document.getElementById('jacketImage');
+
+      if (!title) return alert('曲名を入力してください');
+      if (imageInput.files.length === 0) return alert('ジャケット画像を選択してください');
+
+      const config = GAME_CONFIG[currentGame];
+      const targetObj = {};
+      config.targets.forEach(t => {
+        const val = document.getElementById(`target_${t.key}`).value;
+        if (val !== 'なし') targetObj[t.key] = val;
+      });
+
+      // 目標文字列の生成 (例: "AB / SSS+")
+      const selectedTargets = [];
+      if (targetObj.clear) selectedTargets.push(targetObj.clear);
+      if (targetObj.score) selectedTargets.push(targetObj.score);
+      if (targetObj.pscore) selectedTargets.push(targetObj.pscore);
+      if (targetObj.dscore) selectedTargets.push(targetObj.dscore);
+
+      const targetLabel = selectedTargets.length > 0 ? selectedTargets.join(' / ') : '目標なし';
+
+      const file = imageInput.files[0];
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const allData = loadAllData();
+        const songs = allData[currentGame];
+
+        const newSong = {
+          id: Date.now(),
+          title: title,
+          targetObj: targetObj,
+          targetLabel: targetLabel,
+          difficulty: difficulty,
+          constant: constant,
+          image: e.target.result,
+          isCompleted: false
+        };
+
+        // 同じ目標グループ内で、自分より定数が小さい楽曲の直前（左側）に挿入する
+        let insertIndex = -1;
+        for (let i = 0; i < songs.length; i++) {
+          if (songs[i].targetLabel === targetLabel) {
+            if (songs[i].constant < constant) {
+              insertIndex = i;
+              break;
+            }
+          }
+        }
+
+        if (insertIndex !== -1) {
+          songs.splice(insertIndex, 0, newSong);
+        } else {
+          songs.push(newSong);
+        }
+
+        saveAllData(allData);
+
+        document.getElementById('songTitle').value = '';
+        document.getElementById('jacketImage').value = '';
+        closeAddModal();
+        renderList();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function toggleComplete(id) {
+      const allData = loadAllData();
+      const song = allData[currentGame].find(s => s.id === id);
+      if (song) {
+        song.isCompleted = !song.isCompleted;
+        saveAllData(allData);
+        renderList();
+      }
+    }
+
+    function deleteSong(id) {
+      if (!confirm('削除しますか？')) return;
+      const allData = loadAllData();
+      allData[currentGame] = allData[currentGame].filter(s => s.id !== id);
+      saveAllData(allData);
+      renderList();
+    }
+
+    // 目標グループのソート優先度計算関数
+    function getGroupPriority(targetLabel, songsInGroup) {
+      const sample = songsInGroup[0];
+      const obj = sample.targetObj || {};
+
+      // 1. Pスコア/でらっくすスコアのみ指定の場合は最下位（極小値）
+      if ((obj.pscore || obj.dscore) && !obj.clear && !obj.score) {
+        return -1000;
+      }
+
+      let scoreVal = 0;
+      let clearVal = 0;
+
+      // クリアランクのインデックス評価 (優先度高)
+      if (obj.clear) {
+        const options = ['FC', 'AB', 'AB+', 'AJ', 'AJC', 'AP', 'AP+'];
+        clearVal = (options.indexOf(obj.clear) + 1) * 1000; // クリアランクがあれば高スコア
+      }
+
+      // スコアランクのインデックス評価
+      if (obj.score) {
+        const options = ['S', 'S+', 'SS', 'SS+', 'SSS', 'SSS+'];
+        scoreVal = options.indexOf(obj.score) + 1;
+      }
+
+      return clearVal + scoreVal;
+    }
+
+    function renderList() {
+      const allData = loadAllData();
+      const songs = allData[currentGame] || [];
+      const container = document.getElementById('listContainer');
+      container.innerHTML = '';
+
+      if (songs.length === 0) {
+        container.innerHTML = '<div style="color:#666; text-align:center; padding: 40px 0;">課題曲が登録されていません</div>';
+        return;
+      }
+
+      // 目標ごとにグループ分け
+      const groups = {};
+      songs.forEach(song => {
+        if (!groups[song.targetLabel]) groups[song.targetLabel] = [];
+        groups[song.targetLabel].push(song);
+      });
+
+      // グループのソート（クリアランクあり > スコアランクのみ > Pスコア/でらっくすスコアのみ）
+      const sortedGroupLabels = Object.keys(groups).sort((a, b) => {
+        return getGroupPriority(b, groups[b]) - getGroupPriority(a, groups[a]);
+      });
+
+      const config = GAME_CONFIG[currentGame];
+
+      sortedGroupLabels.forEach(targetLabel => {
+        const songList = groups[targetLabel];
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'target-group';
+
+        const header = document.createElement('div');
+        header.className = 'target-group-header';
+        header.textContent = targetLabel;
+        groupDiv.appendChild(header);
+
+        const grid = document.createElement('div');
+        grid.className = 'song-grid';
+        grid.dataset.targetLabel = targetLabel;
+
+        songList.forEach(song => {
+          const diffConfig = config.difficulties.find(d => d.name === song.difficulty) || { class: '' };
+
+          const card = document.createElement('div');
+          card.className = `song-card ${song.isCompleted ? 'completed' : ''}`;
+          card.draggable = true;
+          card.dataset.id = song.id;
+
+          card.innerHTML = `
+            <div class="jacket-wrapper ${diffConfig.class}" onclick="toggleComplete(${song.id})">
+              <img src="${song.image}" class="jacket-img" alt="${song.title}">
+              <div class="const-badge">${Number(song.constant).toFixed(1)}</div>
+              <div class="checkmark">✓</div>
+            </div>
+            <div class="song-info">
+              <div class="song-title" title="${song.title}">${song.title}</div>
+              <button class="delete-btn" onclick="deleteSong(${song.id})">削除</button>
+            </div>
+          `;
+
+          setupDragAndDrop(card);
+          grid.appendChild(card);
+        });
+
+        setupGridDropZone(grid);
+        groupDiv.appendChild(grid);
+        container.appendChild(groupDiv);
+      });
+    }
+
+    // ドラッグ＆ドロップ関連
+    let draggedItem = null;
+
+    function setupDragAndDrop(card) {
+      card.addEventListener('dragstart', () => {
+        draggedItem = card;
+        setTimeout(() => card.classList.add('dragging'), 0);
+      });
+
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+        draggedItem = null;
+        updateOrderFromDOM();
+      });
+    }
+
+    function setupGridDropZone(grid) {
+      grid.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(grid, e.clientX, e.clientY);
+        if (afterElement == null) {
+          grid.appendChild(draggedItem);
+        } else {
+          grid.insertBefore(draggedItem, afterElement);
+        }
+      });
+    }
+
+    function getDragAfterElement(container, x, y) {
+      const draggableElements = [...container.querySelectorAll('.song-card:not(.dragging)')];
+
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offsetX = x - box.left - box.width / 2;
+        const offsetY = y - box.top - box.height / 2;
+        if (offsetX < 0 && offsetY < 0) {
+          const distance = Math.hypot(offsetX, offsetY);
+          if (distance < closest.offset) {
+            return { offset: distance, element: child };
+          }
+        }
+        return closest;
+      }, { offset: Number.POSITIVE_INFINITY }).element;
+    }
+
+    function updateOrderFromDOM() {
+      const allData = loadAllData();
+      const currentSongs = allData[currentGame];
+      const newOrderedSongs = [];
+
+      document.querySelectorAll('.song-card').forEach(card => {
+        const id = Number(card.dataset.id);
+        const song = currentSongs.find(s => s.id === id);
+        if (song) newOrderedSongs.push(song);
+      });
+
+      allData[currentGame] = newOrderedSongs;
+      saveAllData(allData);
+    }
+
+    renderList();
+  </script>
+</body>
+</html>
