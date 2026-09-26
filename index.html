@@ -16,7 +16,6 @@
 
     * {
       -webkit-tap-highlight-color: transparent;
-      /* PCでのドラッグ時に要素やテキストが青く選択されるのを完全に防ぐ */
       -webkit-user-select: none;
       -moz-user-select: none;
       -ms-user-select: none;
@@ -248,7 +247,7 @@
       filter: brightness(0.35);
     }
 
-    /* チェックマークの初期非表示を完全固定化 */
+    /* チェックマークの初期非表示を固定化 */
     .checkmark {
       display: block;
       visibility: hidden;
@@ -265,7 +264,7 @@
       transition: opacity 0.15s ease, visibility 0.15s ease;
     }
 
-    /* 完了状態の時だけ明示的に表示 */
+    /* 完了状態の時だけ表示 */
     .song-card.completed .checkmark {
       visibility: visible;
       opacity: 1;
@@ -885,7 +884,7 @@
       await renderList();
     }
 
-    /* 達成状態の個別更新（DOM直接操作により描画のちらつきをガード） */
+    /* 達成状態のON/OFF（DOM要素クラスの切替） */
     function toggleComplete(id) {
       const allData = loadAllData();
       const song = allData[currentGame].songs.find(s => s.id === id);
@@ -995,6 +994,7 @@
 
     let globalActiveCancelTimer = null;
 
+    /* タップおよび長押しイベント処理の調整 */
     function setupJacketEvents(element, songId) {
       let pressTimer = null;
       let isLongPress = false;
@@ -1010,7 +1010,6 @@
       element._cancelPress = cancelPress;
 
       const startPress = (e) => {
-        /* マウス右クリックは長押し・達成切り替えから除外 */
         if (e.button && e.button !== 0) return;
 
         isLongPress = false;
@@ -1029,7 +1028,7 @@
         pressTimer = setTimeout(() => {
           isLongPress = true;
           openEditModal(songId);
-        }, 600);
+        }, 500);
       };
 
       const movePress = (e) => {
@@ -1043,12 +1042,17 @@
           currentY = e.clientY;
         }
 
-        if (Math.hypot(currentX - startX, currentY - startY) > 5) {
+        if (Math.hypot(currentX - startX, currentY - startY) > 8) {
           cancelPress();
         }
       };
 
       const endPress = (e) => {
+        // タッチでの連動イベントによる二重発火をガード
+        if (e.type === 'touchend') {
+          if (e.cancelable) e.preventDefault();
+        }
+
         if (pressTimer) {
           cancelPress();
           if (!isLongPress) {
@@ -1057,14 +1061,16 @@
         }
       };
 
+      // PCマウス操作用
       element.addEventListener('mousedown', startPress);
       element.addEventListener('mousemove', movePress);
       element.addEventListener('mouseup', endPress);
       element.addEventListener('mouseleave', cancelPress);
 
+      // スマホタッチ操作用
       element.addEventListener('touchstart', startPress, { passive: true });
       element.addEventListener('touchmove', movePress, { passive: true });
-      element.addEventListener('touchend', endPress);
+      element.addEventListener('touchend', endPress, { passive: false });
       element.addEventListener('touchcancel', cancelPress);
 
       element.addEventListener('contextmenu', (e) => {
@@ -1079,7 +1085,6 @@
         if (jacketWrapper._cancelPress) jacketWrapper._cancelPress();
         if (globalActiveCancelTimer) globalActiveCancelTimer();
 
-        /* PCドラッグ時の選択テキストハイライト全解除 */
         if (window.getSelection) {
           window.getSelection().removeAllRanges();
         }
