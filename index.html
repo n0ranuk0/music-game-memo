@@ -14,14 +14,21 @@
       --gold-color: #ffd700;
     }
 
+    * {
+      -webkit-tap-highlight-color: transparent;
+      /* PCでのドラッグ時に要素やテキストが青く選択されるのを完全に防ぐ */
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg-color);
       color: var(--text-color);
       margin: 0;
       padding: 12px;
-      -webkit-user-select: none;
-      user-select: none;
     }
 
     /* ヘッダーエリア */
@@ -173,6 +180,7 @@
       aspect-ratio: 1 / 1;
       cursor: grab;
       touch-action: manipulation;
+      -webkit-touch-callout: none;
     }
 
     .song-card.dragging {
@@ -185,6 +193,7 @@
       position: relative;
       cursor: pointer;
       box-sizing: border-box;
+      -webkit-touch-callout: none;
     }
 
     .jacket-img {
@@ -193,6 +202,8 @@
       object-fit: cover;
       display: block;
       transition: filter 0.2s ease;
+      -webkit-touch-callout: none;
+      pointer-events: none;
     }
 
     /* 難易度別の枠線カラー */
@@ -230,14 +241,18 @@
       font-weight: bold;
       padding: 1px 4px;
       border-radius: 3px;
+      pointer-events: none;
     }
 
     .song-card.completed .jacket-img {
       filter: brightness(0.35);
     }
 
+    /* チェックマークの初期非表示を完全固定化 */
     .checkmark {
-      display: none;
+      display: block;
+      visibility: hidden;
+      opacity: 0;
       position: absolute;
       top: 50%;
       left: 50%;
@@ -247,10 +262,13 @@
       font-weight: bold;
       pointer-events: none;
       text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+      transition: opacity 0.15s ease, visibility 0.15s ease;
     }
 
+    /* 完了状態の時だけ明示的に表示 */
     .song-card.completed .checkmark {
-      display: block;
+      visibility: visible;
+      opacity: 1;
     }
 
     /* モーダル */
@@ -303,6 +321,8 @@
       background-color: #2a2a2a;
       color: #fff;
       font-size: 16px;
+      -webkit-user-select: text;
+      user-select: text;
     }
 
     .modal-actions {
@@ -417,11 +437,9 @@
   </div>
 
   <script>
-    // 定数および変数の初期化設定
     const STORAGE_KEY = 'my_game_challenge_songs_local_v8';
     let currentGame = 'ongeki';
 
-    // 機種別設定データ
     const GAME_CONFIG = {
       ongeki: {
         name: 'オンゲキ',
@@ -478,14 +496,12 @@
       }
     };
 
-    // IndexedDBの設定
     const IMAGE_DB_NAME = 'GekiChumaiMemoImageDB';
     const IMAGE_DB_VERSION = 1;
     const IMAGE_STORE_NAME = 'images';
     let imageDBPromise = null;
     let activeImageUrls = [];
 
-    // DBオープン処理
     function openImageDB() {
       if (imageDBPromise) return imageDBPromise;
       imageDBPromise = new Promise((resolve, reject) => {
@@ -502,7 +518,6 @@
       return imageDBPromise;
     }
 
-    // DBへ画像を保存する処理
     async function saveImageToDB(blob, key) {
       const db = await openImageDB();
       return new Promise((resolve, reject) => {
@@ -513,7 +528,6 @@
       });
     }
 
-    // DBから画像を取得する処理
     async function getImageFromDB(key) {
       if (!key) return null;
       const db = await openImageDB();
@@ -533,7 +547,6 @@
       });
     }
 
-    // DBから画像を削除する処理
     async function deleteImageFromDB(key) {
       if (!key) return;
       const db = await openImageDB();
@@ -545,13 +558,11 @@
       });
     }
 
-    // メモリ上のURL解放処理
     function releaseImageUrls() {
       activeImageUrls.forEach(url => URL.revokeObjectURL(url));
       activeImageUrls = [];
     }
 
-    // ローカルストレージデータの取得
     function loadAllData() {
       const data = localStorage.getItem(STORAGE_KEY);
       return data ? JSON.parse(data) : {
@@ -561,7 +572,6 @@
       };
     }
 
-    // ローカルストレージデータの保存
     function saveAllData(data) {
       const metadata = JSON.parse(JSON.stringify(data));
       Object.values(metadata).forEach(gameData => {
@@ -577,7 +587,6 @@
       }
     }
 
-    // 旧データ（Base64形式画像）の移行処理
     async function migrateOldImages() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
@@ -616,7 +625,6 @@
       }
     }
 
-    // ゲームタイトルの切り替え処理
     function switchGame(gameKey) {
       currentGame = gameKey;
       document.querySelectorAll('.game-btn').forEach((btn, idx) => {
@@ -626,7 +634,6 @@
       renderList();
     }
 
-    // 目標追加モーダルの表示処理
     function openTargetModal() {
       const config = GAME_CONFIG[currentGame];
       const targetArea = document.getElementById('targetFormArea');
@@ -642,12 +649,10 @@
       document.getElementById('targetModal').classList.add('active');
     }
 
-    // 目標追加モーダルの非表示処理
     function closeTargetModal() {
       document.getElementById('targetModal').classList.remove('active');
     }
 
-    // 目標グループの追加処理
     function addTargetGroup() {
       const config = GAME_CONFIG[currentGame];
       const targetObj = {};
@@ -680,7 +685,6 @@
       renderList();
     }
 
-    // 目標グループの削除処理
     function deleteTargetGroup(targetLabel) {
       if (!confirm(`「${targetLabel}」の項目と登録されている楽曲を削除しますか？`)) return;
       const allData = loadAllData();
@@ -694,7 +698,6 @@
       renderList();
     }
 
-    // 楽曲追加モーダルの表示処理
     function openSongModal(targetLabel) {
       const config = GAME_CONFIG[currentGame];
       document.getElementById('activeTargetLabel').value = targetLabel;
@@ -715,12 +718,10 @@
       document.getElementById('songModal').classList.add('active');
     }
 
-    // 楽曲追加モーダルの非表示処理
     function closeSongModal() {
       document.getElementById('songModal').classList.remove('active');
     }
 
-    // 画像の圧縮処理
     function compressImageForStorage(file, maxSize = 700, quality = 0.82) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -752,7 +753,6 @@
       });
     }
 
-    // 複数画像の一括追加処理
     async function addSong() {
       const targetLabel = document.getElementById('activeTargetLabel').value;
       const difficulty = document.getElementById('difficulty').value;
@@ -826,7 +826,6 @@
       }
     }
 
-    // 編集モーダルの表示処理
     async function openEditModal(songId) {
       const allData = loadAllData();
       const song = allData[currentGame].songs.find(s => s.id === songId);
@@ -853,12 +852,10 @@
       document.getElementById('editModal').classList.add('active');
     }
 
-    // 編集モーダルの非表示処理
     function closeEditModal() {
       document.getElementById('editModal').classList.remove('active');
     }
 
-    // 編集データの保存処理
     function saveEditedSong() {
       const songId = Number(document.getElementById('editSongId').value);
       const difficulty = document.getElementById('editDifficulty').value;
@@ -876,7 +873,6 @@
       }
     }
 
-    // 編集モーダルからの削除処理
     async function deleteSongFromEdit() {
       const songId = Number(document.getElementById('editSongId').value);
       if (!confirm('この楽曲を削除しますか？')) return;
@@ -889,18 +885,21 @@
       await renderList();
     }
 
-    // 達成状態の切り替え処理
+    /* 達成状態の個別更新（DOM直接操作により描画のちらつきをガード） */
     function toggleComplete(id) {
       const allData = loadAllData();
       const song = allData[currentGame].songs.find(s => s.id === id);
       if (song) {
         song.isCompleted = !song.isCompleted;
         saveAllData(allData);
-        renderList();
+        
+        const card = document.querySelector(`.song-card[data-id="${id}"]`);
+        if (card) {
+          card.classList.toggle('completed', song.isCompleted);
+        }
       }
     }
 
-    // グループ優先度の算出処理
     function getGroupPriority(targetObj) {
       const obj = targetObj || {};
       if ((obj.pscore || obj.dscore) && !obj.clear && !obj.score) return -1000;
@@ -917,7 +916,6 @@
       return clearVal + scoreVal;
     }
 
-    // リストの描画処理
     async function renderList() {
       const allData = loadAllData();
       const gameData = allData[currentGame] || { targets: [], songs: [] };
@@ -977,14 +975,14 @@
 
           card.innerHTML = `
             <div class="jacket-wrapper ${diffConfig.class}">
-              <img src="${imageSrc}" class="jacket-img" alt="">
+              <img src="${imageSrc}" class="jacket-img" alt="" draggable="false">
               ${constBadgeHtml}
               <div class="checkmark">✓</div>
             </div>
           `;
 
           const jacketWrapper = card.querySelector('.jacket-wrapper');
-          setupJacketTouchEvents(jacketWrapper, song.id);
+          setupJacketEvents(jacketWrapper, song.id);
           setupDragAndDrop(card, jacketWrapper);
           grid.appendChild(card);
         }
@@ -995,10 +993,9 @@
       }
     }
 
-    // 長押し判定イベントの設定処理
     let globalActiveCancelTimer = null;
 
-    function setupJacketTouchEvents(element, songId) {
+    function setupJacketEvents(element, songId) {
       let pressTimer = null;
       let isLongPress = false;
       let startX = 0, startY = 0;
@@ -1013,6 +1010,9 @@
       element._cancelPress = cancelPress;
 
       const startPress = (e) => {
+        /* マウス右クリックは長押し・達成切り替えから除外 */
+        if (e.button && e.button !== 0) return;
+
         isLongPress = false;
         cancelPress();
 
@@ -1029,7 +1029,7 @@
         pressTimer = setTimeout(() => {
           isLongPress = true;
           openEditModal(songId);
-        }, 750);
+        }, 600);
       };
 
       const movePress = (e) => {
@@ -1049,9 +1049,11 @@
       };
 
       const endPress = (e) => {
-        cancelPress();
-        if (!isLongPress) {
-          toggleComplete(songId);
+        if (pressTimer) {
+          cancelPress();
+          if (!isLongPress) {
+            toggleComplete(songId);
+          }
         }
       };
 
@@ -1064,28 +1066,35 @@
       element.addEventListener('touchmove', movePress, { passive: true });
       element.addEventListener('touchend', endPress);
       element.addEventListener('touchcancel', cancelPress);
+
+      element.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+      });
     }
 
-    // ドラッグ＆ドロップイベントの設定処理
     let draggedItem = null;
 
     function setupDragAndDrop(card, jacketWrapper) {
-      card.addEventListener('dragstart', () => {
+      card.addEventListener('dragstart', (e) => {
         if (jacketWrapper._cancelPress) jacketWrapper._cancelPress();
         if (globalActiveCancelTimer) globalActiveCancelTimer();
+
+        /* PCドラッグ時の選択テキストハイライト全解除 */
+        if (window.getSelection) {
+          window.getSelection().removeAllRanges();
+        }
 
         draggedItem = card;
         setTimeout(() => card.classList.add('dragging'), 0);
       });
 
       card.addEventListener('dragend', () => {
-        card.classList.remove('dragging');
+        if (card) card.classList.remove('dragging');
         draggedItem = null;
         updateOrderFromDOM();
       });
     }
 
-    // ドロップゾーンの設定処理
     function setupGroupDropZone(groupDiv) {
       groupDiv.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -1108,7 +1117,6 @@
       });
     }
 
-    // ドラッグ位置要素の取得処理
     function getDragAfterElement(container, x, y) {
       const draggableElements = [...container.querySelectorAll('.song-card:not(.dragging)')];
 
@@ -1126,7 +1134,6 @@
       }, { offset: Number.POSITIVE_INFINITY }).element;
     }
 
-    // 順序情報の更新処理
     function updateOrderFromDOM() {
       const allData = loadAllData();
       const currentSongs = allData[currentGame].songs;
@@ -1148,7 +1155,6 @@
       saveAllData(allData);
     }
 
-    // 初期化処理
     (async function initializeApp() {
       try {
         await migrateOldImages();
