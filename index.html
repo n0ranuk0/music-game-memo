@@ -484,7 +484,75 @@
       }
     };
 
-    // 全データの読み込み
+    // データ保存
+    // 楽曲情報はlocalStorage、ジャケット画像はIndexedDBへ保存する。
+    const IMAGE_DB_NAME = 'GekiChumaiMemoImageDB';
+    const IMAGE_DB_VERSION = 1;
+    const IMAGE_STORE_NAME = 'images';
+    let imageDBPromise = null;
+    let activeImageUrls = [];
+
+    function openImageDB() {
+      if (imageDBPromise) return imageDBPromise;
+      imageDBPromise = new Promise((resolve, reject) => {
+        const request = indexedDB.open(IMAGE_DB_NAME, IMAGE_DB_VERSION);
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains(IMAGE_STORE_NAME)) {
+            db.createObjectStore(IMAGE_STORE_NAME);
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      return imageDBPromise;
+    }
+
+    async function saveImageToDB(blob, key) {
+      const db = await openImageDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(IMAGE_STORE_NAME, 'readwrite');
+        tx.objectStore(IMAGE_STORE_NAME).put(blob, key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error || new Error('画像の保存に失敗しました'));
+      });
+    }
+
+    async function getImageFromDB(key) {
+      if (!key) return null;
+      const db = await openImageDB();
+      return new Promise((resolve, reject) => {
+        const req = db.transaction(IMAGE_STORE_NAME, 'readonly')
+          .objectStore(IMAGE_STORE_NAME).get(key);
+        req.onsuccess = () => {
+          if (!req.result) {
+            resolve(null);
+            return;
+          }
+          const url = URL.createObjectURL(req.result);
+          activeImageUrls.push(url);
+          resolve(url);
+        };
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function deleteImageFromDB(key) {
+      if (!key) return;
+      const db = await openImageDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(IMAGE_STORE_NAME, 'readwrite');
+        tx.objectStore(IMAGE_STORE_NAME).delete(key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    function releaseImageUrls() {
+      activeImageUrls.forEach(url => URL.revokeObjectURL(url));
+      activeImageUrls = [];
+    }
+
     function loadAllData() {
       const data = localStorage.getItem(STORAGE_KEY);
       return data ? JSON.parse(data) : {
@@ -494,9 +562,59 @@
       };
     }
 
-    // 全データの保存
     function saveAllData(data) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      const metadata = JSON.parse(JSON.stringify(data));
+      Object.values(metadata).forEach(gameData => {
+        if (!gameData || !Array.isArray(gameData.songs)) return;
+        gameData.songs.forEach(song => {
+          // 古いBase64画像をlocalStorageに残さない
+          if (song.image && song.imageKey) delete song.image;
+        });
+      });
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(metadata));
+      } catch (e) {
+        throw new Error('楽曲情報の保存容量が不足しています。');
+      }
+    }
+
+    // 以前のバージョンでlocalStorageに保存された画像をIndexedDBへ移行。
+    async function migrateOldImages() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        return;
+      }
+
+      let changed = false;
+
+      for (const gameData of Object.values(data)) {
+        if (!gameData || !Array.isArray(gameData.songs)) continue;
+
+        for (const song of gameData.songs) {
+          if (!song.image || song.imageKey) continue;
+
+          try {
+            const response = await fetch(song.image);
+            const blob = await response.blob();
+            const key = `song_${song.id}_${Math.random().toString(36).slice(2)}`;
+            await saveImageToDB(blob, key);
+            song.imageKey = key;
+            delete song.image;
+            changed = true;
+          } catch (e) {
+            console.error('旧画像の移行失敗:', e);
+          }
+        }
+      }
+
+      if (changed) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
     }
 
     // 機種切替処理
@@ -601,71 +719,38 @@
       document.getElementById('songModal').classList.remove('active');
     }
 
-    // 画像をスマホでも保存しやすいサイズに変換
-    // 高解像度の写真をそのままlocalStorageへ保存すると、
-    // iPhone/Androidでは容量制限に達して追加に失敗しやすいため、
-    // 最大600px・JPEG品質0.82に縮小してから保存する。
-    function compressImageForStorage(file, maxSize = 600, quality = 0.82) {
+    // 画像を小さくしてIndexedDBへ保存する。
+    function compressImageForStorage(file, maxSize = 700, quality = 0.82) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-
-        reader.onload = function (e) {
+        reader.onload = e => {
           const img = new Image();
-
-          img.onload = function () {
-            let width = img.naturalWidth;
-            let height = img.naturalHeight;
-
-            if (!width || !height) {
-              reject(new Error('画像サイズを取得できませんでした'));
-              return;
-            }
-
-            const scale = Math.min(1, maxSize / Math.max(width, height));
-            width = Math.max(1, Math.round(width * scale));
-            height = Math.max(1, Math.round(height * scale));
+          img.onload = () => {
+            let w = img.naturalWidth;
+            let h = img.naturalHeight;
+            const scale = Math.min(1, maxSize / Math.max(w, h));
+            w = Math.max(1, Math.round(w * scale));
+            h = Math.max(1, Math.round(h * scale));
 
             const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-
+            canvas.width = w;
+            canvas.height = h;
             const ctx = canvas.getContext('2d');
-            if (!ctx) {
-              reject(new Error('画像処理に対応していないブラウザです'));
-              return;
-            }
+            ctx.drawImage(img, 0, 0, w, h);
 
-            ctx.drawImage(img, 0, 0, width, height);
-
-            canvas.toBlob(function (blob) {
-              if (!blob) {
-                reject(new Error('画像の圧縮に失敗しました'));
-                return;
-              }
-
-              const blobReader = new FileReader();
-              blobReader.onload = () => resolve(blobReader.result);
-              blobReader.onerror = () => reject(new Error('画像の読み込みに失敗しました'));
-              blobReader.readAsDataURL(blob);
+            canvas.toBlob(blob => {
+              if (blob) resolve(blob);
+              else reject(new Error('画像の圧縮に失敗しました'));
             }, 'image/jpeg', quality);
           };
-
-          img.onerror = function () {
-            reject(new Error('この画像形式を読み込めませんでした'));
-          };
-
+          img.onerror = () => reject(new Error('画像を読み込めませんでした'));
           img.src = e.target.result;
         };
-
-        reader.onerror = function () {
-          reject(new Error('画像ファイルを読み込めませんでした'));
-        };
-
+        reader.onerror = () => reject(new Error('画像ファイルを読み込めませんでした'));
         reader.readAsDataURL(file);
       });
     }
 
-    // 楽曲の追加
     async function addSong() {
       const targetLabel = document.getElementById('activeTargetLabel').value;
       const difficulty = document.getElementById('difficulty').value;
@@ -678,74 +763,63 @@
         return;
       }
 
-      const file = imageInput.files[0];
-
-      // 二重タップによる二重登録を防止
       const addButton = document.querySelector('#songModal .modal-actions .btn:not(.btn-secondary)');
       if (addButton) {
         addButton.disabled = true;
         addButton.textContent = '追加中…';
       }
 
-      try {
-        const imageData = await compressImageForStorage(file);
-        const allData = loadAllData();
+      let imageKey = null;
 
-        if (!allData[currentGame]) {
-          allData[currentGame] = { targets: [], songs: [] };
-        }
+      try {
+        const blob = await compressImageForStorage(imageInput.files[0]);
+        const id = Date.now();
+        imageKey = `song_${id}_${Math.random().toString(36).slice(2)}`;
+
+        // ★画像はlocalStorageではなくIndexedDBへ保存
+        await saveImageToDB(blob, imageKey);
+
+        const allData = loadAllData();
+        if (!allData[currentGame]) allData[currentGame] = { targets: [], songs: [] };
 
         const songs = allData[currentGame].songs;
-
         const newSong = {
-          id: Date.now(),
-          targetLabel: targetLabel,
-          difficulty: difficulty,
-          constant: constant,
-          image: imageData,
+          id,
+          targetLabel,
+          difficulty,
+          constant,
+          imageKey,
           isCompleted: false
         };
 
         let insertIndex = -1;
         if (constant !== null) {
           for (let i = 0; i < songs.length; i++) {
-            if (songs[i].targetLabel === targetLabel && songs[i].constant !== null) {
-              if (songs[i].constant < constant) {
-                insertIndex = i;
-                break;
-              }
+            if (songs[i].targetLabel === targetLabel && songs[i].constant !== null &&
+                songs[i].constant < constant) {
+              insertIndex = i;
+              break;
             }
           }
         }
 
-        if (insertIndex !== -1) {
-          songs.splice(insertIndex, 0, newSong);
-        } else {
-          songs.push(newSong);
-        }
+        if (insertIndex >= 0) songs.splice(insertIndex, 0, newSong);
+        else songs.push(newSong);
 
         try {
           saveAllData(allData);
-        } catch (storageError) {
-          // 保存に失敗した場合は今回追加した曲を戻す
-          if (insertIndex !== -1) {
-            songs.splice(insertIndex, 1);
-          } else {
-            songs.pop();
-          }
-
-          throw new Error(
-            '保存容量が不足しています。不要な楽曲を削除してから、もう一度お試しください。'
-          );
+        } catch (e) {
+          await deleteImageFromDB(imageKey);
+          throw e;
         }
 
         imageInput.value = '';
         closeSongModal();
-        renderList();
+        await renderList();
 
-      } catch (error) {
-        console.error('楽曲追加エラー:', error);
-        alert(error.message || '楽曲の追加に失敗しました。画像を変えてもう一度お試しください。');
+      } catch (e) {
+        console.error(e);
+        alert(e.message || '楽曲の追加に失敗しました。');
       } finally {
         if (addButton) {
           addButton.disabled = false;
@@ -755,7 +829,7 @@
     }
 
     // 編集モーダルの表示
-    function openEditModal(songId) {
+    async function openEditModal(songId) {
       const allData = loadAllData();
       const song = allData[currentGame].songs.find(s => s.id === songId);
       if (!song) return;
@@ -763,7 +837,7 @@
       const config = GAME_CONFIG[currentGame];
 
       document.getElementById('editSongId').value = song.id;
-      document.getElementById('editJacketPreview').src = song.image;
+      document.getElementById('editJacketPreview').src = song.imageKey ? (await getImageFromDB(song.imageKey) || '') : (song.image || '');
 
       const diffSelect = document.getElementById('editDifficulty');
       diffSelect.innerHTML = config.difficulties.map(d => 
@@ -805,14 +879,16 @@
     }
 
     // 編集モーダル経由での楽曲削除
-    function deleteSongFromEdit() {
+    async function deleteSongFromEdit() {
       const songId = Number(document.getElementById('editSongId').value);
       if (!confirm('この楽曲を削除しますか？')) return;
       const allData = loadAllData();
+      const song = allData[currentGame].songs.find(s => s.id === songId);
       allData[currentGame].songs = allData[currentGame].songs.filter(s => s.id !== songId);
       saveAllData(allData);
+      if (song && song.imageKey) await deleteImageFromDB(song.imageKey);
       closeEditModal();
-      renderList();
+      await renderList();
     }
 
     // 完了フラグの切替
@@ -844,10 +920,11 @@
     }
 
     // 画面再描画処理
-    function renderList() {
+    async function renderList() {
       const allData = loadAllData();
       const gameData = allData[currentGame] || { targets: [], songs: [] };
       const container = document.getElementById('listContainer');
+      releaseImageUrls();
       container.innerHTML = '';
 
       if (gameData.targets.length === 0) {
@@ -896,9 +973,13 @@
             ? `<div class="const-badge">${Number(song.constant).toFixed(1)}</div>` 
             : '';
 
+          const imageSrc = song.imageKey
+            ? (await getImageFromDB(song.imageKey) || '')
+            : (song.image || '');
+
           card.innerHTML = `
             <div class="jacket-wrapper ${diffConfig.class}">
-              <img src="${song.image}" class="jacket-img" alt="">
+              <img src="${imageSrc}" class="jacket-img" alt="">
               ${constBadgeHtml}
               <div class="checkmark">✓</div>
             </div>
@@ -1066,7 +1147,14 @@
       saveAllData(allData);
     }
 
-    renderList();
+    (async function initializeApp() {
+      try {
+        await migrateOldImages();
+      } catch (e) {
+        console.error('画像データ移行エラー:', e);
+      }
+      await renderList();
+    })();
   </script>
 </body>
 </html>
