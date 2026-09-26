@@ -203,10 +203,8 @@
     .diff-lunatic { border: 4px solid #ffffff; }
     .diff-remaster { border: 4px solid #e0e0e0; }
     
-    /* オンゲキ Re:MASTER: ほんのり黒い青 */
     .diff-ongeki-remaster { border: 4px solid #00a2ff; }
 
-    /* チュウニズム ULTIMA: 赤と黒の縞模様 */
     .diff-ultima {
       border: 4px solid transparent;
       border-image: repeating-linear-gradient(
@@ -218,13 +216,10 @@
       ) 1;
     }
 
-    /* チュウニズム WORLD'S END: 虹色 */
     .diff-worlds-end { border: 4px solid transparent; border-image: linear-gradient(45deg, red, orange, yellow, green, cyan, blue, violet) 1; }
 
-    /* maimai 宴: 桃 */
     .diff-utaage { border: 4px solid #ff69b4; }
 
-    /* 定数バッジ (文字色ゴールド) */
     .const-badge {
       position: absolute;
       bottom: 2px;
@@ -237,7 +232,6 @@
       border-radius: 3px;
     }
 
-    /* 達成状態 */
     .song-card.completed .jacket-img {
       filter: brightness(0.35);
     }
@@ -331,7 +325,7 @@
 
 <body>
 
-  <!-- ヘッダー -->
+  <!-- ヘッダーエリア -->
   <div class="header-area">
     <h1>ゲキチュウマイメモ</h1>
   </div>
@@ -373,8 +367,8 @@
       <input type="hidden" id="activeTargetLabel">
 
       <div class="form-group">
-        <label for="jacketImage">ジャケット画像 (必須)</label>
-        <input type="file" id="jacketImage" accept="image/*" style="font-size:16px; width:100%; box-sizing:border-box;">
+        <label for="jacketImage">ジャケット画像 (複数選択可能)</label>
+        <input type="file" id="jacketImage" accept="image/*" multiple style="font-size:16px; width:100%; box-sizing:border-box;">
       </div>
 
       <div class="form-group">
@@ -394,7 +388,7 @@
     </div>
   </div>
 
-  <!-- 3. 楽曲編集モーダル (長押しで起動) -->
+  <!-- 3. 楽曲編集モーダル -->
   <div class="modal-overlay" id="editModal">
     <div class="modal-content">
       <h3>楽曲情報の編集</h3>
@@ -423,7 +417,7 @@
   </div>
 
   <script>
-    // 定義ステートメントによるコメント記述
+    // 定数および変数の初期化設定
     const STORAGE_KEY = 'my_game_challenge_songs_local_v8';
     let currentGame = 'ongeki';
 
@@ -484,14 +478,14 @@
       }
     };
 
-    // データ保存
-    // 楽曲情報はlocalStorage、ジャケット画像はIndexedDBへ保存する。
+    // IndexedDBの設定
     const IMAGE_DB_NAME = 'GekiChumaiMemoImageDB';
     const IMAGE_DB_VERSION = 1;
     const IMAGE_STORE_NAME = 'images';
     let imageDBPromise = null;
     let activeImageUrls = [];
 
+    // DBオープン処理
     function openImageDB() {
       if (imageDBPromise) return imageDBPromise;
       imageDBPromise = new Promise((resolve, reject) => {
@@ -508,6 +502,7 @@
       return imageDBPromise;
     }
 
+    // DBへ画像を保存する処理
     async function saveImageToDB(blob, key) {
       const db = await openImageDB();
       return new Promise((resolve, reject) => {
@@ -518,6 +513,7 @@
       });
     }
 
+    // DBから画像を取得する処理
     async function getImageFromDB(key) {
       if (!key) return null;
       const db = await openImageDB();
@@ -537,6 +533,7 @@
       });
     }
 
+    // DBから画像を削除する処理
     async function deleteImageFromDB(key) {
       if (!key) return;
       const db = await openImageDB();
@@ -548,11 +545,13 @@
       });
     }
 
+    // メモリ上のURL解放処理
     function releaseImageUrls() {
       activeImageUrls.forEach(url => URL.revokeObjectURL(url));
       activeImageUrls = [];
     }
 
+    // ローカルストレージデータの取得
     function loadAllData() {
       const data = localStorage.getItem(STORAGE_KEY);
       return data ? JSON.parse(data) : {
@@ -562,12 +561,12 @@
       };
     }
 
+    // ローカルストレージデータの保存
     function saveAllData(data) {
       const metadata = JSON.parse(JSON.stringify(data));
       Object.values(metadata).forEach(gameData => {
         if (!gameData || !Array.isArray(gameData.songs)) return;
         gameData.songs.forEach(song => {
-          // 古いBase64画像をlocalStorageに残さない
           if (song.image && song.imageKey) delete song.image;
         });
       });
@@ -578,7 +577,7 @@
       }
     }
 
-    // 以前のバージョンでlocalStorageに保存された画像をIndexedDBへ移行。
+    // 旧データ（Base64形式画像）の移行処理
     async function migrateOldImages() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
@@ -617,7 +616,7 @@
       }
     }
 
-    // 機種切替処理
+    // ゲームタイトルの切り替え処理
     function switchGame(gameKey) {
       currentGame = gameKey;
       document.querySelectorAll('.game-btn').forEach((btn, idx) => {
@@ -627,7 +626,7 @@
       renderList();
     }
 
-    // 項目追加モーダルの表示
+    // 目標追加モーダルの表示処理
     function openTargetModal() {
       const config = GAME_CONFIG[currentGame];
       const targetArea = document.getElementById('targetFormArea');
@@ -643,25 +642,27 @@
       document.getElementById('targetModal').classList.add('active');
     }
 
-    // 項目追加モーダルの非表示
+    // 目標追加モーダルの非表示処理
     function closeTargetModal() {
       document.getElementById('targetModal').classList.remove('active');
     }
 
-    // 項目グループの追加
+    // 目標グループの追加処理
     function addTargetGroup() {
       const config = GAME_CONFIG[currentGame];
       const targetObj = {};
-      config.targets.forEach(t => {
-        const val = document.getElementById(`target_${t.key}`).value;
-        if (val !== 'なし') targetObj[t.key] = val;
-      });
-
       const selectedTargets = [];
-      if (targetObj.clear) selectedTargets.push(targetObj.clear);
-      if (targetObj.score) selectedTargets.push(targetObj.score);
-      if (targetObj.pscore) selectedTargets.push(targetObj.pscore);
-      if (targetObj.dscore) selectedTargets.push(targetObj.dscore);
+
+      config.targets.forEach(t => {
+        const el = document.getElementById(`target_${t.key}`);
+        if (el) {
+          const val = el.value;
+          if (val !== 'なし') {
+            targetObj[t.key] = val;
+            selectedTargets.push(val);
+          }
+        }
+      });
 
       if (selectedTargets.length === 0) return alert('いずれかの目標値を選択してください');
 
@@ -679,7 +680,7 @@
       renderList();
     }
 
-    // 項目グループの削除
+    // 目標グループの削除処理
     function deleteTargetGroup(targetLabel) {
       if (!confirm(`「${targetLabel}」の項目と登録されている楽曲を削除しますか？`)) return;
       const allData = loadAllData();
@@ -693,7 +694,7 @@
       renderList();
     }
 
-    // 楽曲追加モーダルの表示
+    // 楽曲追加モーダルの表示処理
     function openSongModal(targetLabel) {
       const config = GAME_CONFIG[currentGame];
       document.getElementById('activeTargetLabel').value = targetLabel;
@@ -714,12 +715,12 @@
       document.getElementById('songModal').classList.add('active');
     }
 
-    // 楽曲追加モーダルの非表示
+    // 楽曲追加モーダルの非表示処理
     function closeSongModal() {
       document.getElementById('songModal').classList.remove('active');
     }
 
-    // 画像を小さくしてIndexedDBへ保存する。
+    // 画像の圧縮処理
     function compressImageForStorage(file, maxSize = 700, quality = 0.82) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -751,6 +752,7 @@
       });
     }
 
+    // 複数画像の一括追加処理
     async function addSong() {
       const targetLabel = document.getElementById('activeTargetLabel').value;
       const difficulty = document.getElementById('difficulty').value;
@@ -769,50 +771,46 @@
         addButton.textContent = '追加中…';
       }
 
-      let imageKey = null;
-
       try {
-        const blob = await compressImageForStorage(imageInput.files[0]);
-        const id = Date.now();
-        imageKey = `song_${id}_${Math.random().toString(36).slice(2)}`;
-
-        // ★画像はlocalStorageではなくIndexedDBへ保存
-        await saveImageToDB(blob, imageKey);
-
         const allData = loadAllData();
         if (!allData[currentGame]) allData[currentGame] = { targets: [], songs: [] };
 
-        const songs = allData[currentGame].songs;
-        const newSong = {
-          id,
-          targetLabel,
-          difficulty,
-          constant,
-          imageKey,
-          isCompleted: false
-        };
+        const files = Array.from(imageInput.files);
 
-        let insertIndex = -1;
-        if (constant !== null) {
-          for (let i = 0; i < songs.length; i++) {
-            if (songs[i].targetLabel === targetLabel && songs[i].constant !== null &&
-                songs[i].constant < constant) {
-              insertIndex = i;
-              break;
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const blob = await compressImageForStorage(file);
+          const id = Date.now() + i;
+          const imageKey = `song_${id}_${Math.random().toString(36).slice(2)}`;
+
+          await saveImageToDB(blob, imageKey);
+
+          const newSong = {
+            id,
+            targetLabel,
+            difficulty,
+            constant,
+            imageKey,
+            isCompleted: false
+          };
+
+          const songs = allData[currentGame].songs;
+          let insertIndex = -1;
+          if (constant !== null) {
+            for (let j = 0; j < songs.length; j++) {
+              if (songs[j].targetLabel === targetLabel && songs[j].constant !== null &&
+                  songs[j].constant < constant) {
+                insertIndex = j;
+                break;
+              }
             }
           }
+
+          if (insertIndex >= 0) songs.splice(insertIndex, 0, newSong);
+          else songs.push(newSong);
         }
 
-        if (insertIndex >= 0) songs.splice(insertIndex, 0, newSong);
-        else songs.push(newSong);
-
-        try {
-          saveAllData(allData);
-        } catch (e) {
-          await deleteImageFromDB(imageKey);
-          throw e;
-        }
-
+        saveAllData(allData);
         imageInput.value = '';
         closeSongModal();
         await renderList();
@@ -828,7 +826,7 @@
       }
     }
 
-    // 編集モーダルの表示
+    // 編集モーダルの表示処理
     async function openEditModal(songId) {
       const allData = loadAllData();
       const song = allData[currentGame].songs.find(s => s.id === songId);
@@ -855,12 +853,12 @@
       document.getElementById('editModal').classList.add('active');
     }
 
-    // 編集モーダルの非表示
+    // 編集モーダルの非表示処理
     function closeEditModal() {
       document.getElementById('editModal').classList.remove('active');
     }
 
-    // 編集データの保存
+    // 編集データの保存処理
     function saveEditedSong() {
       const songId = Number(document.getElementById('editSongId').value);
       const difficulty = document.getElementById('editDifficulty').value;
@@ -878,7 +876,7 @@
       }
     }
 
-    // 編集モーダル経由での楽曲削除
+    // 編集モーダルからの削除処理
     async function deleteSongFromEdit() {
       const songId = Number(document.getElementById('editSongId').value);
       if (!confirm('この楽曲を削除しますか？')) return;
@@ -891,7 +889,7 @@
       await renderList();
     }
 
-    // 完了フラグの切替
+    // 達成状態の切り替え処理
     function toggleComplete(id) {
       const allData = loadAllData();
       const song = allData[currentGame].songs.find(s => s.id === id);
@@ -902,7 +900,7 @@
       }
     }
 
-    // グループ優先度の取得
+    // グループ優先度の算出処理
     function getGroupPriority(targetObj) {
       const obj = targetObj || {};
       if ((obj.pscore || obj.dscore) && !obj.clear && !obj.score) return -1000;
@@ -919,7 +917,7 @@
       return clearVal + scoreVal;
     }
 
-    // 画面再描画処理
+    // リストの描画処理
     async function renderList() {
       const allData = loadAllData();
       const gameData = allData[currentGame] || { targets: [], songs: [] };
@@ -938,7 +936,7 @@
 
       const config = GAME_CONFIG[currentGame];
 
-      sortedTargets.forEach(targetItem => {
+      for (const targetItem of sortedTargets) {
         const targetLabel = targetItem.label;
         const songList = gameData.songs.filter(s => s.targetLabel === targetLabel);
 
@@ -961,7 +959,7 @@
         grid.className = 'song-grid';
         grid.dataset.targetLabel = targetLabel;
 
-        songList.forEach(song => {
+        for (const song of songList) {
           const diffConfig = config.difficulties.find(d => d.name === song.difficulty) || { class: '' };
 
           const card = document.createElement('div');
@@ -989,15 +987,15 @@
           setupJacketTouchEvents(jacketWrapper, song.id);
           setupDragAndDrop(card, jacketWrapper);
           grid.appendChild(card);
-        });
+        }
 
         setupGroupDropZone(groupDiv);
         groupDiv.appendChild(grid);
         container.appendChild(groupDiv);
-      });
+      }
     }
 
-    // 長押し判定 (1秒)
+    // 長押し判定イベントの設定処理
     let globalActiveCancelTimer = null;
 
     function setupJacketTouchEvents(element, songId) {
@@ -1068,7 +1066,7 @@
       element.addEventListener('touchcancel', cancelPress);
     }
 
-    // ドラッグ＆ドロップ制御
+    // ドラッグ＆ドロップイベントの設定処理
     let draggedItem = null;
 
     function setupDragAndDrop(card, jacketWrapper) {
@@ -1087,6 +1085,7 @@
       });
     }
 
+    // ドロップゾーンの設定処理
     function setupGroupDropZone(groupDiv) {
       groupDiv.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -1109,6 +1108,7 @@
       });
     }
 
+    // ドラッグ位置要素の取得処理
     function getDragAfterElement(container, x, y) {
       const draggableElements = [...container.querySelectorAll('.song-card:not(.dragging)')];
 
@@ -1126,6 +1126,7 @@
       }, { offset: Number.POSITIVE_INFINITY }).element;
     }
 
+    // 順序情報の更新処理
     function updateOrderFromDOM() {
       const allData = loadAllData();
       const currentSongs = allData[currentGame].songs;
@@ -1147,6 +1148,7 @@
       saveAllData(allData);
     }
 
+    // 初期化処理
     (async function initializeApp() {
       try {
         await migrateOldImages();
