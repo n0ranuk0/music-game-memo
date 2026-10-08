@@ -110,20 +110,13 @@
     }
 
     .target-group-title {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: bold;
       color: #00bcd4;
       display: flex;
       align-items: center;
-      gap: 8px;
-    }
-
-    .type-badge {
-      font-size: 0.7rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background-color: #333;
-      color: #ccc;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
     .progress-text {
@@ -141,7 +134,7 @@
     /* 画像グリッドレイアウト */
     .song-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
       gap: 8px;
       min-height: 40px;
     }
@@ -152,9 +145,9 @@
       overflow: hidden;
       position: relative;
       aspect-ratio: 1 / 1;
-      cursor: grab;
-      touch-action: none;
-      border: 3px solid transparent; /* 難易度カラー用 */
+      cursor: pointer;
+      touch-action: manipulation;
+      border: 3px solid transparent;
     }
 
     .jacket-wrapper {
@@ -183,14 +176,14 @@
 
     .song-text-item {
       background-color: var(--card-bg);
-      padding: 12px 14px;
+      padding: 10px 12px;
       border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-left: 5px solid #666;
-      cursor: grab;
-      touch-action: none;
+      cursor: pointer;
+      touch-action: manipulation;
       position: relative;
       transition: background-color 0.15s ease, opacity 0.15s ease;
     }
@@ -203,14 +196,55 @@
     .song-text-info {
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 0.95rem;
+      gap: 8px;
+      font-size: 0.9rem;
       font-weight: bold;
+      flex: 1;
+      overflow: hidden;
     }
 
-    .song-text-item.completed .song-text-info {
+    .song-title-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .song-text-item.completed .song-title-text {
       text-decoration: line-through;
       color: #888;
+    }
+
+    /* テキスト表示時の定数バッジ */
+    .text-const-badge {
+      background-color: rgba(0, 0, 0, 0.85);
+      color: var(--gold-color);
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      flex-shrink: 0;
+    }
+
+    /* 編集アイコンボタン */
+    .edit-btn {
+      position: absolute;
+      top: 2px; right: 2px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      border-radius: 50%;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      z-index: 10;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .song-text-item .edit-btn {
+      position: static;
+      margin-left: 8px;
+      flex-shrink: 0;
     }
 
     /* チェックマーク */
@@ -228,12 +262,13 @@
       position: absolute;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 2rem;
+      font-size: 2.2rem;
       text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
     }
 
     .song-text-item .checkmark {
-      font-size: 1.3rem;
+      font-size: 1.2rem;
+      margin-left: 8px;
     }
 
     .song-card.completed .checkmark,
@@ -258,7 +293,7 @@
       bottom: 2px; right: 2px;
       background-color: rgba(0, 0, 0, 0.85);
       color: var(--gold-color);
-      font-size: 0.7rem; font-weight: bold;
+      font-size: 0.65rem; font-weight: bold;
       padding: 1px 4px; border-radius: 3px;
       pointer-events: none;
     }
@@ -305,7 +340,7 @@
     .type-selector {
       display: flex;
       gap: 8px;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     .type-btn {
@@ -353,12 +388,13 @@
     <div id="listContainer"></div>
   </div>
 
-  <!-- 1. 項目追加モーダル -->
+  <!-- 1. 項目追加・編集モーダル -->
   <div class="modal-overlay" id="targetModal">
     <div class="modal-content">
-      <h3>項目を追加</h3>
-      
-      <div class="form-group">
+      <h3 id="targetModalTitle">項目を追加</h3>
+      <input type="hidden" id="editingTargetOldLabel">
+
+      <div class="form-group" id="groupTypeSelectorArea">
         <label>表示形式</label>
         <div class="type-selector">
           <div class="type-btn active" id="typeBtnImage" onclick="selectGroupType('image')">ジャケット画像</div>
@@ -367,29 +403,28 @@
       </div>
 
       <div class="form-group">
-        <label>項目の種類</label>
-        <select id="groupCategorySelect" onchange="toggleCategoryInput()">
-          <option value="constant">定数</option>
-          <option value="clear">クリアランク</option>
-          <option value="score">スコアランク</option>
-        </select>
-      </div>
-
-      <!-- 定数プルダウン -->
-      <div class="form-group" id="constantSelectArea">
-        <label>定数選択</label>
+        <label>定数</label>
         <select id="targetConstantSelect"></select>
       </div>
 
-      <!-- クリアランク・スコアランク プルダウン -->
-      <div class="form-group" id="rankSelectArea" style="display: none;">
-        <label>目標ランク</label>
-        <select id="targetRankSelect"></select>
+      <div class="form-group">
+        <label>スコアランク</label>
+        <select id="targetScoreSelect"></select>
+      </div>
+
+      <div class="form-group">
+        <label>クリアランク</label>
+        <select id="targetClearSelect"></select>
+      </div>
+
+      <div class="form-group">
+        <label>任意タイトル</label>
+        <input type="text" id="targetFreeText" placeholder="例 : ◯◯からの挑戦">
       </div>
 
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeTargetModal()">キャンセル</button>
-        <button class="btn" onclick="addTargetGroup()">作成</button>
+        <button class="btn" id="saveTargetBtn" onclick="saveTargetGroup()">作成</button>
       </div>
     </div>
   </div>
@@ -417,7 +452,6 @@
         <select id="difficulty"></select>
       </div>
 
-      <!-- グループが定数以外の時のみ表示される定数プルダウン -->
       <div class="form-group" id="constantSelectGroup">
         <label for="constant">定数 (任意)</label>
         <select id="constant"></select>
@@ -436,8 +470,8 @@
     <div class="modal-content">
       <h3>共有メモを取り込む</h3>
       <div class="form-group">
-        <label>共有コード（テキスト）を貼り付け</label>
-        <textarea id="importCodeInput" rows="5" placeholder="ここに相手から受け取ったコードを貼り付け"></textarea>
+        <label>共有コードを貼り付け</label>
+        <input type="text" id="importCodeInput" placeholder="共有コード" style="text-align: center; font-size: 1.1rem; letter-spacing: 2px; font-weight: bold;">
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeImportModal()">キャンセル</button>
@@ -447,7 +481,8 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'my_game_challenge_songs_local_v11';
+    const STORAGE_KEY = 'my_game_challenge_songs_local_v12';
+    const SHARED_STORE_KEY = 'my_game_shared_codes_v1';
     let currentGame = 'ongeki';
     let selectedGroupType = 'image';
 
@@ -561,47 +596,50 @@
       renderList();
     }
 
-    /* 項目モーダル操作 */
+    /* 項目モーダル操作 (追加・編集) */
     function selectGroupType(type) {
       selectedGroupType = type;
       document.getElementById('typeBtnImage').classList.toggle('active', type === 'image');
       document.getElementById('typeBtnText').classList.toggle('active', type === 'text');
     }
 
-    function toggleCategoryInput() {
-      const cat = document.getElementById('groupCategorySelect').value;
+    function openTargetModal(oldLabel = null, currentGroupType = 'image') {
       const config = GAME_CONFIG[currentGame];
+      document.getElementById('editingTargetOldLabel').value = oldLabel || '';
 
-      const constArea = document.getElementById('constantSelectArea');
-      const rankArea = document.getElementById('rankSelectArea');
-      const rankSelect = document.getElementById('targetRankSelect');
+      document.getElementById('targetModalTitle').textContent = oldLabel ? '項目を編集' : '項目を追加';
+      document.getElementById('saveTargetBtn').textContent = oldLabel ? '更新' : '作成';
+      document.getElementById('groupTypeSelectorArea').style.display = oldLabel ? 'none' : 'flex';
 
-      if (cat === 'constant') {
-        constArea.style.display = 'flex';
-        rankArea.style.display = 'none';
-      } else if (cat === 'clear') {
-        constArea.style.display = 'none';
-        rankArea.style.display = 'flex';
-        rankSelect.innerHTML = config.clearRanks.map(r => `<option value="${r}">${r}</option>`).join('');
-      } else if (cat === 'score') {
-        constArea.style.display = 'none';
-        rankArea.style.display = 'flex';
-        rankSelect.innerHTML = config.scoreRanks.map(r => `<option value="${r}">${r}</option>`).join('');
-      }
-    }
-
-    function openTargetModal() {
-      const config = GAME_CONFIG[currentGame];
       const constSelect = document.getElementById('targetConstantSelect');
-      constSelect.innerHTML = '';
+      constSelect.innerHTML = '<option value="">なし</option>';
       for (let v = config.maxConst; v >= config.minConst; v = (v - 0.1).toFixed(1)) {
         const valStr = parseFloat(v).toFixed(1);
         constSelect.innerHTML += `<option value="${valStr}">${valStr}</option>`;
       }
 
-      selectGroupType('image');
-      document.getElementById('groupCategorySelect').value = 'constant';
-      toggleCategoryInput();
+      const scoreSelect = document.getElementById('targetScoreSelect');
+      scoreSelect.innerHTML = '<option value="">なし</option>' + config.scoreRanks.map(r => `<option value="${r}">${r}</option>`).join('');
+
+      const clearSelect = document.getElementById('targetClearSelect');
+      clearSelect.innerHTML = '<option value="">なし</option>' + config.clearRanks.map(r => `<option value="${r}">${r}</option>`).join('');
+
+      document.getElementById('targetFreeText').value = '';
+
+      if (oldLabel) {
+        // ラベル文字列から既存選択項目を復元
+        const parts = oldLabel.split(' ');
+        parts.forEach(part => {
+          if ([...constSelect.options].some(o => o.value === part)) constSelect.value = part;
+          else if ([...scoreSelect.options].some(o => o.value === part)) scoreSelect.value = part;
+          else if ([...clearSelect.options].some(o => o.value === part)) clearSelect.value = part;
+          else document.getElementById('targetFreeText').value = part;
+        });
+        selectGroupType(currentGroupType);
+      } else {
+        selectGroupType('image');
+      }
+
       document.getElementById('targetModal').classList.add('active');
     }
 
@@ -609,30 +647,45 @@
       document.getElementById('targetModal').classList.remove('active');
     }
 
-    function addTargetGroup() {
-      const cat = document.getElementById('groupCategorySelect').value;
-      let targetLabel = '';
+    function saveTargetGroup() {
+      const oldLabel = document.getElementById('editingTargetOldLabel').value;
+      const constVal = document.getElementById('targetConstantSelect').value;
+      const scoreVal = document.getElementById('targetScoreSelect').value;
+      const clearVal = document.getElementById('targetClearSelect').value;
+      const freeText = document.getElementById('targetFreeText').value.trim();
 
-      if (cat === 'constant') {
-        targetLabel = document.getElementById('targetConstantSelect').value;
-      } else {
-        targetLabel = document.getElementById('targetRankSelect').value;
-      }
+      const parts = [];
+      if (constVal) parts.push(constVal);
+      if (scoreVal) parts.push(scoreVal);
+      if (clearVal) parts.push(clearVal);
+      if (freeText) parts.push(freeText);
+
+      const newLabel = parts.length > 0 ? parts.join(' ') : '未分類';
 
       const allData = loadAllData();
       const gameData = allData[currentGame] || { targets: [], songs: [] };
 
-      // 同一 label かつ 同一 groupType の重複チェック
-      if (!gameData.targets.some(t => t.label === targetLabel && t.groupType === selectedGroupType)) {
-        gameData.targets.push({ 
-          label: targetLabel, 
-          groupType: selectedGroupType,
-          category: cat
+      if (oldLabel) {
+        // 項目名の更新
+        const target = gameData.targets.find(t => t.label === oldLabel);
+        if (target) target.label = newLabel;
+
+        // 配下の楽曲の参照ラベルも更新
+        gameData.songs.forEach(s => {
+          if (s.targetLabel === oldLabel) s.targetLabel = newLabel;
         });
-        allData[currentGame] = gameData;
-        saveAllData(allData);
+      } else {
+        // 新規追加
+        if (!gameData.targets.some(t => t.label === newLabel && t.groupType === selectedGroupType)) {
+          gameData.targets.push({ 
+            label: newLabel, 
+            groupType: selectedGroupType
+          });
+        }
       }
 
+      allData[currentGame] = gameData;
+      saveAllData(allData);
       closeTargetModal();
       renderList();
     }
@@ -642,7 +695,6 @@
       const allData = loadAllData();
       const gameData = allData[currentGame];
       
-      // 画像削除
       const targetSongs = gameData.songs.filter(s => s.targetLabel === targetLabel && (s.groupType || (s.isTextOnly ? 'text' : 'image')) === groupType);
       targetSongs.forEach(s => { if (s.imageKey) deleteImageFromDB(s.imageKey); });
 
@@ -654,7 +706,7 @@
     }
 
     /* 楽曲モーダル操作 (追加/編集) */
-    function openSongModal(targetLabel, groupType, category, editSongId = null) {
+    function openSongModal(targetLabel, groupType, editSongId = null) {
       const config = GAME_CONFIG[currentGame];
       document.getElementById('editingSongId').value = editSongId || '';
       document.getElementById('activeTargetLabel').value = targetLabel;
@@ -672,30 +724,20 @@
         `<option value="${d.name}">${d.name}</option>`
       ).join('');
 
-      /* グループが「定数」の場合は曲追加・編集時の定数選択を非表示 */
-      const constGroupEl = document.getElementById('constantSelectGroup');
-      if (category === 'constant' || !isNaN(parseFloat(targetLabel))) {
-        constGroupEl.style.display = 'none';
-      } else {
-        constGroupEl.style.display = 'flex';
-        const constSelect = document.getElementById('constant');
-        constSelect.innerHTML = '<option value="">なし</option>';
-        for (let v = config.maxConst; v >= config.minConst; v = (v - 0.1).toFixed(1)) {
-          const valStr = parseFloat(v).toFixed(1);
-          constSelect.innerHTML += `<option value="${valStr}">${valStr}</option>`;
-        }
+      const constSelect = document.getElementById('constant');
+      constSelect.innerHTML = '<option value="">なし</option>';
+      for (let v = config.maxConst; v >= config.minConst; v = (v - 0.1).toFixed(1)) {
+        const valStr = parseFloat(v).toFixed(1);
+        constSelect.innerHTML += `<option value="${valStr}">${valStr}</option>`;
       }
 
-      /* 編集時の既存データ入力 */
       if (editSongId) {
         const allData = loadAllData();
         const song = allData[currentGame].songs.find(s => s.id === editSongId);
         if (song) {
           if (groupType === 'text') document.getElementById('songTitle').value = song.title || '';
           diffSelect.value = song.difficulty || config.defaultDiff;
-          if (constGroupEl.style.display !== 'none' && song.constant) {
-            document.getElementById('constant').value = Number(song.constant).toFixed(1);
-          }
+          if (song.constant) document.getElementById('constant').value = Number(song.constant).toFixed(1);
         }
       } else {
         diffSelect.value = config.defaultDiff;
@@ -716,18 +758,13 @@
       const groupType = document.getElementById('activeGroupType').value;
       const difficulty = document.getElementById('difficulty').value;
 
-      const constGroupEl = document.getElementById('constantSelectGroup');
-      let constant = null;
-      if (constGroupEl.style.display !== 'none') {
-        const constVal = document.getElementById('constant').value;
-        constant = constVal !== '' ? parseFloat(constVal) : null;
-      }
+      const constVal = document.getElementById('constant').value;
+      const constant = constVal !== '' ? parseFloat(constVal) : null;
 
       const allData = loadAllData();
       if (!allData[currentGame]) allData[currentGame] = { targets: [], songs: [] };
 
       if (editSongId) {
-        /* 編集更新処理 */
         const song = allData[currentGame].songs.find(s => s.id === editSongId);
         if (song) {
           song.difficulty = difficulty;
@@ -745,7 +782,6 @@
           }
         }
       } else {
-        /* 新規追加処理 */
         if (groupType === 'text') {
           const title = document.getElementById('songTitle').value.trim();
           if (!title) return alert('曲名を入力してください');
@@ -803,7 +839,7 @@
       renderList();
     }
 
-    /* チラつきを防ぐDOM直接変更のクリア切り替え */
+    /* ワンタップでのチェック切り替え */
     function toggleComplete(id, element) {
       const allData = loadAllData();
       const song = allData[currentGame].songs.find(s => s.id === id);
@@ -811,10 +847,8 @@
         song.isCompleted = !song.isCompleted;
         saveAllData(allData);
 
-        // UI切り替え
         element.classList.toggle('completed', song.isCompleted);
 
-        // 親グループの進捗表示のみ更新
         const groupEl = element.closest('.target-group');
         if (groupEl) {
           const songGroupType = song.groupType || (song.isTextOnly ? 'text' : 'image');
@@ -828,68 +862,40 @@
       }
     }
 
-    /* 長押し・タップの判定設定 (長押し: 2.5秒 = 2500ms) */
-    function attachCardEvents(cardElement, songId, targetLabel, groupType, category) {
-      let pressTimer = null;
-      let isLongPress = false;
-      let startX = 0, startY = 0;
-
-      const start = (e) => {
-        isLongPress = false;
-        const touch = e.touches ? e.touches[0] : e;
-        startX = touch.clientX;
-        startY = touch.clientY;
-
-        pressTimer = setTimeout(() => {
-          isLongPress = true;
-          if (navigator.vibrate) navigator.vibrate(40);
-          openSongModal(targetLabel, groupType, category, songId);
-        }, 2500); // 2.5秒に設定
-      };
-
-      const move = (e) => {
-        const touch = e.touches ? e.touches[0] : e;
-        if (Math.abs(touch.clientX - startX) > 8 || Math.abs(touch.clientY - startY) > 8) {
-          clearTimeout(pressTimer);
-        }
-      };
-
-      const cancel = () => clearTimeout(pressTimer);
-
-      const end = (e) => {
-        clearTimeout(pressTimer);
-        if (!isLongPress) {
-          toggleComplete(songId, cardElement);
-        }
-      };
-
-      cardElement.addEventListener('touchstart', start, { passive: true });
-      cardElement.addEventListener('touchmove', move, { passive: true });
-      cardElement.addEventListener('touchend', end);
-      cardElement.addEventListener('touchcancel', cancel);
-
-      cardElement.addEventListener('mousedown', start);
-      cardElement.addEventListener('mousemove', move);
-      cardElement.addEventListener('mouseup', end);
-      cardElement.addEventListener('mouseleave', cancel);
+    /* 短縮共有ID生成 & 管理（6文字形式） */
+    function generateShortCode() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let code = '';
+      for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
     }
 
-    /* 共有機能 */
     function shareGroupText(targetLabel) {
       const allData = loadAllData();
       const songs = allData[currentGame].songs.filter(s => s.targetLabel === targetLabel && s.isTextOnly);
 
       if (songs.length === 0) return alert('共有できるテキストデータがありません');
 
-      const exportData = {
-        label: targetLabel,
+      const exportObj = {
         game: currentGame,
-        songs: songs.map(s => ({ title: s.title, difficulty: s.difficulty, constant: s.constant }))
+        targetLabel,
+        songs: songs.map(s => ({
+          title: s.title,
+          difficulty: s.difficulty,
+          constant: s.constant
+        }))
       };
 
-      const shareCode = btoa(encodeURIComponent(JSON.stringify(exportData)));
+      // 6文字短縮コードの生成と保存
+      const sharedStore = JSON.parse(localStorage.getItem(SHARED_STORE_KEY) || '{}');
+      const shareCode = generateShortCode();
+      sharedStore[shareCode] = exportObj;
+      localStorage.setItem(SHARED_STORE_KEY, JSON.stringify(sharedStore));
+
       navigator.clipboard.writeText(shareCode).then(() => {
-        alert(`「${targetLabel}」の共有コードをクリップボードにコピーしました！\n相手に貼り付けて渡してください。`);
+        alert(`「${targetLabel}」の共有コード [ ${shareCode} ] をコピーしました！`);
       });
     }
 
@@ -906,39 +912,44 @@
       const code = document.getElementById('importCodeInput').value.trim();
       if (!code) return alert('コードを入力してください');
 
-      try {
-        const decoded = JSON.parse(decodeURIComponent(atob(code)));
-        if (!decoded.label || !decoded.songs) throw new Error();
+      const sharedStore = JSON.parse(localStorage.getItem(SHARED_STORE_KEY) || '{}');
+      const decoded = sharedStore[code];
 
-        const allData = loadAllData();
-        const gameData = allData[currentGame] || { targets: [], songs: [] };
+      if (!decoded || !decoded.targetLabel || !Array.isArray(decoded.songs)) {
+        return alert('無効な共有コードです。コードを確認してください。');
+      }
 
-        if (!gameData.targets.some(t => t.label === decoded.label && t.groupType === 'text')) {
-          gameData.targets.push({ label: decoded.label, groupType: 'text', category: 'constant' });
-        }
+      const targetLabel = decoded.targetLabel;
+      const gameKey = decoded.game || currentGame;
+      const allData = loadAllData();
+      const gameData = allData[gameKey] || { targets: [], songs: [] };
 
-        decoded.songs.forEach(s => {
+      if (!gameData.targets.some(t => t.label === targetLabel && t.groupType === 'text')) {
+        gameData.targets.push({ label: targetLabel, groupType: 'text' });
+      }
+
+      decoded.songs.forEach(songItem => {
+        if (songItem.title) {
           gameData.songs.push({
             id: Date.now() + Math.random(),
-            targetLabel: decoded.label,
+            targetLabel,
             groupType: 'text',
-            title: s.title,
-            difficulty: s.difficulty,
-            constant: s.constant,
+            title: songItem.title,
+            difficulty: songItem.difficulty || GAME_CONFIG[gameKey].defaultDiff,
+            constant: songItem.constant ? parseFloat(songItem.constant) : null,
             isCompleted: false,
             isTextOnly: true
           });
-        });
+        }
+      });
 
-        allData[currentGame] = gameData;
-        saveAllData(allData);
-        closeImportModal();
-        renderList();
-        alert(`項目「${decoded.label}」を取り込みました！`);
+      allData[gameKey] = gameData;
+      saveAllData(allData);
+      closeImportModal();
+      if (gameKey !== currentGame) switchGame(gameKey);
+      else renderList();
 
-      } catch (e) {
-        alert('コードの解析に失敗しました。正しいコードか確認してください。');
-      }
+      alert(`項目「${targetLabel}」を取り込みました！`);
     }
 
     /* メイン描画処理 */
@@ -956,16 +967,13 @@
       const config = GAME_CONFIG[currentGame];
 
       for (const targetItem of gameData.targets) {
-        const targetLabel = targetItem.label;
+        const targetLabel = targetItem.label || '未分類';
         const groupType = targetItem.groupType || 'image';
-        const category = targetItem.category || (isNaN(parseFloat(targetLabel)) ? 'rank' : 'constant');
         
-        // 項目とグループタイプで楽曲を抽出
         const songList = gameData.songs.filter(s => s.targetLabel === targetLabel && (s.groupType || (s.isTextOnly ? 'text' : 'image')) === groupType);
 
         const completedCount = songList.filter(s => s.isCompleted).length;
         const progressStr = songList.length > 0 ? `(${completedCount}/${songList.length})` : '';
-        const typeBadgeText = groupType === 'image' ? '画像' : 'テキスト';
 
         const groupDiv = document.createElement('div');
         groupDiv.className = 'target-group';
@@ -974,11 +982,12 @@
         header.className = 'target-group-header';
         header.innerHTML = `
           <div class="target-group-title">
-            ${targetLabel} <span class="type-badge">${typeBadgeText}</span> <span class="progress-text">${progressStr}</span>
+            ${targetLabel} <span class="progress-text">${progressStr}</span>
           </div>
           <div class="target-group-actions">
             ${groupType === 'text' ? `<button class="btn btn-sm btn-share" onclick="shareGroupText('${targetLabel}')">共有</button>` : ''}
-            <button class="btn btn-sm" onclick="openSongModal('${targetLabel}', '${groupType}', '${category}')">＋ 追加</button>
+            <button class="btn btn-sm btn-secondary" onclick="openTargetModal('${targetLabel}', '${groupType}')">編集</button>
+            <button class="btn btn-sm" onclick="openSongModal('${targetLabel}', '${groupType}')">＋ 追加</button>
             <button class="btn btn-sm btn-danger" onclick="deleteTargetGroup('${targetLabel}', '${groupType}')">削除</button>
           </div>
         `;
@@ -998,6 +1007,7 @@
             const imageSrc = await getImageFromDB(song.imageKey) || '';
 
             card.innerHTML = `
+              <div class="edit-btn" onclick="event.stopPropagation(); openSongModal('${targetLabel}', '${groupType}', ${song.id})">✎</div>
               <div class="jacket-wrapper">
                 <img src="${imageSrc}" class="jacket-img" alt="">
                 ${constBadgeHtml}
@@ -1005,13 +1015,13 @@
               </div>
             `;
 
-            attachCardEvents(card, song.id, targetLabel, groupType, category);
+            card.onclick = () => toggleComplete(song.id, card);
             grid.appendChild(card);
           }
 
           new Sortable(grid, {
             animation: 150,
-            delay: 150,
+            delay: 200,
             delayOnTouchOnly: true,
             onEnd: () => updateOrderFromDOM()
           });
@@ -1029,22 +1039,24 @@
             item.className = `song-text-item ${diffConfig.class} ${song.isCompleted ? 'completed' : ''}`;
             item.dataset.id = song.id;
 
-            const constStr = song.constant ? ` (${Number(song.constant).toFixed(1)})` : '';
+            const constBadgeHtml = song.constant ? `<div class="text-const-badge">${Number(song.constant).toFixed(1)}</div>` : '';
 
             item.innerHTML = `
               <div class="song-text-info">
-                <span>${song.title}${constStr}</span>
+                <span class="song-title-text">${song.title}</span>
+                ${constBadgeHtml}
               </div>
               <div class="checkmark">✓</div>
+              <div class="edit-btn" onclick="event.stopPropagation(); openSongModal('${targetLabel}', '${groupType}', ${song.id})">✎</div>
             `;
 
-            attachCardEvents(item, song.id, targetLabel, groupType, category);
+            item.onclick = () => toggleComplete(song.id, item);
             textList.appendChild(item);
           }
 
           new Sortable(textList, {
             animation: 150,
-            delay: 150,
+            delay: 200,
             delayOnTouchOnly: true,
             onEnd: () => updateOrderFromDOM()
           });
@@ -1065,10 +1077,9 @@
         const titleEl = groupDiv.querySelector('.target-group-title');
         if (!titleEl) return;
         
-        // 項目名を取得
         const targetLabel = titleEl.childNodes[0].textContent.trim();
-        const typeBadge = groupDiv.querySelector('.type-badge');
-        const groupType = typeBadge && typeBadge.textContent === 'テキスト' ? 'text' : 'image';
+        const textList = groupDiv.querySelector('.song-text-list');
+        const groupType = textList ? 'text' : 'image';
 
         groupDiv.querySelectorAll('[data-id]').forEach(el => {
           const id = Number(el.dataset.id);
