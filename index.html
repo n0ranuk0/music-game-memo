@@ -277,16 +277,69 @@
       opacity: 1;
     }
 
-    /* 難易度別のアクセントカラー */
+    /* 難易度別のアクセントカラー設定 */
     .diff-master { border-color: #9c27b0; }
     .diff-expert { border-color: #f44336; }
     .diff-advanced { border-color: #ffeb3b; }
     .diff-basic { border-color: #4caf50; }
-    .diff-lunatic { border-color: #e91e63; }
     .diff-remaster { border-color: #00a2ff; }
-    .diff-ultima { border-color: #651fff; }
-    .diff-worlds-end { border-color: #795548; }
     .diff-utaage { border-color: #ff4081; }
+
+    /* オンゲキ LUNATIC: 白色 */
+    .diff-lunatic { border-color: #ffffff !important; }
+
+    /* チュウニズム ULTIMA: 赤と黒のストライプ (縞模様) */
+    .song-card.diff-ultima {
+      border-style: solid;
+      border-width: 3px;
+      border-image: repeating-linear-gradient(
+        45deg,
+        #e53935,
+        #e53935 8px,
+        #000000 8px,
+        #000000 16px
+      ) 1 !important;
+    }
+
+    .song-text-item.diff-ultima {
+      border-left-width: 6px;
+      border-left-style: solid;
+      border-image: repeating-linear-gradient(
+        180deg,
+        #e53935,
+        #e53935 8px,
+        #000000 8px,
+        #000000 16px
+      ) 1 !important;
+    }
+
+    /* チュウニズム WORLD'S END: 虹色グラデーション（流れるアニメーション） */
+    @keyframes rainbow-shift {
+      0% { border-image-source: linear-gradient(0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff); }
+      25% { border-image-source: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff); }
+      50% { border-image-source: linear-gradient(180deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff); }
+      75% { border-image-source: linear-gradient(270deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff); }
+      100% { border-image-source: linear-gradient(360deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff); }
+    }
+
+    .song-card.diff-worlds-end {
+      border-style: solid;
+      border-width: 3px;
+      border-image: linear-gradient(
+        45deg,
+        #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff
+      ) 1 !important;
+      animation: rainbow-shift 4s linear infinite;
+    }
+
+    .song-text-item.diff-worlds-end {
+      border-left-width: 6px;
+      border-left-style: solid;
+      border-image: linear-gradient(
+        180deg,
+        #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff
+      ) 1 !important;
+    }
 
     .const-badge {
       position: absolute;
@@ -361,6 +414,30 @@
       border-color: #2979ff;
       font-weight: bold;
     }
+
+    .bulk-share-list {
+      max-height: 200px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 4px;
+    }
+
+    .bulk-share-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #2a2a2a;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    .bulk-share-item input[type="checkbox"] {
+      width: 18px; height: 18px;
+      accent-color: #ff9800;
+    }
   </style>
 </head>
 
@@ -369,6 +446,7 @@
   <div class="header-area">
     <h1>ゲキチュウマイメモ</h1>
     <div class="header-actions">
+      <button class="btn btn-share btn-sm" onclick="openBulkShareModal()">一括共有</button>
       <button class="btn btn-secondary btn-sm" onclick="openImportModal()">インポート</button>
     </div>
   </div>
@@ -471,7 +549,7 @@
       <h3>共有メモを取り込む</h3>
       <div class="form-group">
         <label>共有コードを貼り付け</label>
-        <textarea id="importCodeInput" rows="4" placeholder="共有コードを貼り付け" style="width: 100%; word-break: break-all; font-size: 0.85rem; font-family: monospace;"></textarea>
+        <input type="text" id="importCodeInput" placeholder="共有コード" style="text-align: center; font-size: 1.1rem; letter-spacing: 2px; font-weight: bold;">
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeImportModal()">キャンセル</button>
@@ -480,8 +558,24 @@
     </div>
   </div>
 
+  <!-- 4. 一括共有モーダル -->
+  <div class="modal-overlay" id="bulkShareModal">
+    <div class="modal-content">
+      <h3>テキスト項目を一括共有</h3>
+      <div class="form-group">
+        <label>共有したい項目を選択してください</label>
+        <div class="bulk-share-list" id="bulkShareListContainer"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeBulkShareModal()">キャンセル</button>
+        <button class="btn btn-share" onclick="executeBulkShare()">共有コード生成</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = 'my_game_challenge_songs_local_v12';
+    const SHARED_STORE_KEY = 'my_game_shared_codes_v2';
     let currentGame = 'ongeki';
     let selectedGroupType = 'image';
 
@@ -857,7 +951,16 @@
       }
     }
 
-    /* 他端末・スマホ間でも自己完結する共有データ共有機能 */
+    /* 6桁短縮共有コード生成 & 管理 */
+    function generateShortCode() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let code = '';
+      for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    }
+
     function shareGroupText(targetLabel) {
       const allData = loadAllData();
       const songs = allData[currentGame].songs.filter(s => s.targetLabel === targetLabel && s.isTextOnly);
@@ -865,28 +968,95 @@
       if (songs.length === 0) return alert('共有できるテキストデータがありません');
 
       const exportObj = {
-        g: currentGame,
-        l: targetLabel,
-        s: songs.map(s => ({
-          t: s.title,
-          d: s.difficulty,
-          c: s.constant
-        }))
+        game: currentGame,
+        groups: [{
+          targetLabel,
+          songs: songs.map(s => ({
+            title: s.title,
+            difficulty: s.difficulty,
+            constant: s.constant
+          }))
+        }]
       };
 
-      try {
-        const jsonStr = JSON.stringify(exportObj);
-        const shareCode = btoa(encodeURIComponent(jsonStr));
+      const sharedStore = JSON.parse(localStorage.getItem(SHARED_STORE_KEY) || '{}');
+      const shareCode = generateShortCode();
+      sharedStore[shareCode] = exportObj;
+      localStorage.setItem(SHARED_STORE_KEY, JSON.stringify(sharedStore));
 
-        navigator.clipboard.writeText(shareCode).then(() => {
-          alert(`「${targetLabel}」の共有コードをコピーしました！`);
-        }).catch(() => {
-          // スマホクリップボード制限時のフォールバック
-          prompt("以下の共有コードをコピーしてください:", shareCode);
+      navigator.clipboard.writeText(shareCode).then(() => {
+        alert(`「${targetLabel}」の共有コード [ ${shareCode} ] をコピーしました！`);
+      }).catch(() => {
+        prompt("以下の共有コードをコピーしてください:", shareCode);
+      });
+    }
+
+    /* 一括共有機能 */
+    function openBulkShareModal() {
+      const allData = loadAllData();
+      const textTargets = (allData[currentGame]?.targets || []).filter(t => t.groupType === 'text');
+      const container = document.getElementById('bulkShareListContainer');
+      container.innerHTML = '';
+
+      if (textTargets.length === 0) {
+        container.innerHTML = '<div style="color:#888; text-align:center; padding: 12px;">共有可能なテキスト項目がありません</div>';
+      } else {
+        textTargets.forEach((t, idx) => {
+          const songsCount = (allData[currentGame]?.songs || []).filter(s => s.targetLabel === t.label && s.isTextOnly).length;
+          container.innerHTML += `
+            <label class="bulk-share-item">
+              <input type="checkbox" value="${t.label}" checked>
+              <span>${t.label} (${songsCount}曲)</span>
+            </label>
+          `;
         });
-      } catch (e) {
-        alert('共有コードの生成に失敗しました');
       }
+
+      document.getElementById('bulkShareModal').classList.add('active');
+    }
+
+    function closeBulkShareModal() {
+      document.getElementById('bulkShareModal').classList.remove('active');
+    }
+
+    function executeBulkShare() {
+      const checkboxes = document.querySelectorAll('#bulkShareListContainer input[type="checkbox"]:checked');
+      const selectedLabels = Array.from(checkboxes).map(cb => cb.value);
+
+      if (selectedLabels.length === 0) return alert('共有する項目を1つ以上選択してください');
+
+      const allData = loadAllData();
+      const groupsToShare = [];
+
+      selectedLabels.forEach(label => {
+        const songs = (allData[currentGame]?.songs || []).filter(s => s.targetLabel === label && s.isTextOnly);
+        if (songs.length > 0) {
+          groupsToShare.push({
+            targetLabel: label,
+            songs: songs.map(s => ({
+              title: s.title,
+              difficulty: s.difficulty,
+              constant: s.constant
+            }))
+          });
+        }
+      });
+
+      if (groupsToShare.length === 0) return alert('選択した項目に共有可能な楽曲がありません');
+
+      const exportObj = { game: currentGame, groups: groupsToShare };
+      const sharedStore = JSON.parse(localStorage.getItem(SHARED_STORE_KEY) || '{}');
+      const shareCode = generateShortCode();
+      sharedStore[shareCode] = exportObj;
+      localStorage.setItem(SHARED_STORE_KEY, JSON.stringify(sharedStore));
+
+      closeBulkShareModal();
+
+      navigator.clipboard.writeText(shareCode).then(() => {
+        alert(`${groupsToShare.length}件の項目の共有コード [ ${shareCode} ] をコピーしました！`);
+      }).catch(() => {
+        prompt("以下の共有コードをコピーしてください:", shareCode);
+      });
     }
 
     function openImportModal() {
@@ -899,58 +1069,49 @@
     }
 
     function importGroupData() {
-      const codeInput = document.getElementById('importCodeInput').value.trim();
-      if (!codeInput) return alert('コードを入力してください');
+      const code = document.getElementById('importCodeInput').value.trim();
+      if (!code) return alert('コードを入力してください');
 
-      try {
-        const jsonStr = decodeURIComponent(atob(codeInput));
-        const decoded = JSON.parse(jsonStr);
+      const sharedStore = JSON.parse(localStorage.getItem(SHARED_STORE_KEY) || '{}');
+      const decoded = sharedStore[code];
 
-        const targetLabel = decoded.l || decoded.targetLabel;
-        const gameKey = decoded.g || decoded.game || currentGame;
-        const songItems = decoded.s || decoded.songs;
+      if (!decoded || !Array.isArray(decoded.groups)) {
+        return alert('無効な共有コードです。コードを確認してください。');
+      }
 
-        if (!targetLabel || !Array.isArray(songItems)) {
-          throw new Error('Format Error');
-        }
+      const gameKey = decoded.game || currentGame;
+      const allData = loadAllData();
+      const gameData = allData[gameKey] || { targets: [], songs: [] };
 
-        const allData = loadAllData();
-        const gameData = allData[gameKey] || { targets: [], songs: [] };
-
+      decoded.groups.forEach(group => {
+        const targetLabel = group.targetLabel;
         if (!gameData.targets.some(t => t.label === targetLabel && t.groupType === 'text')) {
           gameData.targets.push({ label: targetLabel, groupType: 'text' });
         }
 
-        songItems.forEach(songItem => {
-          const title = songItem.t || songItem.title;
-          const diff = songItem.d || songItem.difficulty || GAME_CONFIG[gameKey].defaultDiff;
-          const constVal = songItem.c !== undefined ? songItem.c : songItem.constant;
-
-          if (title) {
+        group.songs.forEach(songItem => {
+          if (songItem.title) {
             gameData.songs.push({
               id: Date.now() + Math.random(),
               targetLabel,
               groupType: 'text',
-              title,
-              difficulty: diff,
-              constant: constVal ? parseFloat(constVal) : null,
+              title: songItem.title,
+              difficulty: songItem.difficulty || GAME_CONFIG[gameKey].defaultDiff,
+              constant: songItem.constant ? parseFloat(songItem.constant) : null,
               isCompleted: false,
               isTextOnly: true
             });
           }
         });
+      });
 
-        allData[gameKey] = gameData;
-        saveAllData(allData);
-        closeImportModal();
-        if (gameKey !== currentGame) switchGame(gameKey);
-        else renderList();
+      allData[gameKey] = gameData;
+      saveAllData(allData);
+      closeImportModal();
+      if (gameKey !== currentGame) switchGame(gameKey);
+      else renderList();
 
-        alert(`項目「${targetLabel}」を取り込みました！`);
-
-      } catch (e) {
-        alert('無効な共有コードです。正しくコピーされているか確認してください。');
-      }
+      alert(`${decoded.groups.length}件の項目を取り込みました！`);
     }
 
     /* メイン描画処理 */
