@@ -471,7 +471,7 @@
       <h3>共有メモを取り込む</h3>
       <div class="form-group">
         <label>共有コードを貼り付け</label>
-        <input type="text" id="importCodeInput" placeholder="共有コード" style="text-align: center; font-size: 1.1rem; letter-spacing: 2px; font-weight: bold;">
+        <textarea id="importCodeInput" rows="4" placeholder="共有コードを貼り付け" style="width: 100%; word-break: break-all; font-size: 0.85rem; font-family: monospace;"></textarea>
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeImportModal()">キャンセル</button>
@@ -482,7 +482,6 @@
 
   <script>
     const STORAGE_KEY = 'my_game_challenge_songs_local_v12';
-    const SHARED_STORE_KEY = 'my_game_shared_codes_v1';
     let currentGame = 'ongeki';
     let selectedGroupType = 'image';
 
@@ -627,7 +626,6 @@
       document.getElementById('targetFreeText').value = '';
 
       if (oldLabel) {
-        // ラベル文字列から既存選択項目を復元
         const parts = oldLabel.split(' ');
         parts.forEach(part => {
           if ([...constSelect.options].some(o => o.value === part)) constSelect.value = part;
@@ -666,16 +664,13 @@
       const gameData = allData[currentGame] || { targets: [], songs: [] };
 
       if (oldLabel) {
-        // 項目名の更新
         const target = gameData.targets.find(t => t.label === oldLabel);
         if (target) target.label = newLabel;
 
-        // 配下の楽曲の参照ラベルも更新
         gameData.songs.forEach(s => {
           if (s.targetLabel === oldLabel) s.targetLabel = newLabel;
         });
       } else {
-        // 新規追加
         if (!gameData.targets.some(t => t.label === newLabel && t.groupType === selectedGroupType)) {
           gameData.targets.push({ 
             label: newLabel, 
@@ -862,16 +857,7 @@
       }
     }
 
-    /* 短縮共有ID生成 & 管理（6文字形式） */
-    function generateShortCode() {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let code = '';
-      for (let i = 0; i < 6; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return code;
-    }
-
+    /* 他端末・スマホ間でも自己完結する共有データ共有機能 */
     function shareGroupText(targetLabel) {
       const allData = loadAllData();
       const songs = allData[currentGame].songs.filter(s => s.targetLabel === targetLabel && s.isTextOnly);
@@ -879,24 +865,28 @@
       if (songs.length === 0) return alert('共有できるテキストデータがありません');
 
       const exportObj = {
-        game: currentGame,
-        targetLabel,
-        songs: songs.map(s => ({
-          title: s.title,
-          difficulty: s.difficulty,
-          constant: s.constant
+        g: currentGame,
+        l: targetLabel,
+        s: songs.map(s => ({
+          t: s.title,
+          d: s.difficulty,
+          c: s.constant
         }))
       };
 
-      // 6文字短縮コードの生成と保存
-      const sharedStore = JSON.parse(localStorage.getItem(SHARED_STORE_KEY) || '{}');
-      const shareCode = generateShortCode();
-      sharedStore[shareCode] = exportObj;
-      localStorage.setItem(SHARED_STORE_KEY, JSON.stringify(sharedStore));
+      try {
+        const jsonStr = JSON.stringify(exportObj);
+        const shareCode = btoa(encodeURIComponent(jsonStr));
 
-      navigator.clipboard.writeText(shareCode).then(() => {
-        alert(`「${targetLabel}」の共有コード [ ${shareCode} ] をコピーしました！`);
-      });
+        navigator.clipboard.writeText(shareCode).then(() => {
+          alert(`「${targetLabel}」の共有コードをコピーしました！`);
+        }).catch(() => {
+          // スマホクリップボード制限時のフォールバック
+          prompt("以下の共有コードをコピーしてください:", shareCode);
+        });
+      } catch (e) {
+        alert('共有コードの生成に失敗しました');
+      }
     }
 
     function openImportModal() {
@@ -909,47 +899,58 @@
     }
 
     function importGroupData() {
-      const code = document.getElementById('importCodeInput').value.trim();
-      if (!code) return alert('コードを入力してください');
+      const codeInput = document.getElementById('importCodeInput').value.trim();
+      if (!codeInput) return alert('コードを入力してください');
 
-      const sharedStore = JSON.parse(localStorage.getItem(SHARED_STORE_KEY) || '{}');
-      const decoded = sharedStore[code];
+      try {
+        const jsonStr = decodeURIComponent(atob(codeInput));
+        const decoded = JSON.parse(jsonStr);
 
-      if (!decoded || !decoded.targetLabel || !Array.isArray(decoded.songs)) {
-        return alert('無効な共有コードです。コードを確認してください。');
-      }
+        const targetLabel = decoded.l || decoded.targetLabel;
+        const gameKey = decoded.g || decoded.game || currentGame;
+        const songItems = decoded.s || decoded.songs;
 
-      const targetLabel = decoded.targetLabel;
-      const gameKey = decoded.game || currentGame;
-      const allData = loadAllData();
-      const gameData = allData[gameKey] || { targets: [], songs: [] };
-
-      if (!gameData.targets.some(t => t.label === targetLabel && t.groupType === 'text')) {
-        gameData.targets.push({ label: targetLabel, groupType: 'text' });
-      }
-
-      decoded.songs.forEach(songItem => {
-        if (songItem.title) {
-          gameData.songs.push({
-            id: Date.now() + Math.random(),
-            targetLabel,
-            groupType: 'text',
-            title: songItem.title,
-            difficulty: songItem.difficulty || GAME_CONFIG[gameKey].defaultDiff,
-            constant: songItem.constant ? parseFloat(songItem.constant) : null,
-            isCompleted: false,
-            isTextOnly: true
-          });
+        if (!targetLabel || !Array.isArray(songItems)) {
+          throw new Error('Format Error');
         }
-      });
 
-      allData[gameKey] = gameData;
-      saveAllData(allData);
-      closeImportModal();
-      if (gameKey !== currentGame) switchGame(gameKey);
-      else renderList();
+        const allData = loadAllData();
+        const gameData = allData[gameKey] || { targets: [], songs: [] };
 
-      alert(`項目「${targetLabel}」を取り込みました！`);
+        if (!gameData.targets.some(t => t.label === targetLabel && t.groupType === 'text')) {
+          gameData.targets.push({ label: targetLabel, groupType: 'text' });
+        }
+
+        songItems.forEach(songItem => {
+          const title = songItem.t || songItem.title;
+          const diff = songItem.d || songItem.difficulty || GAME_CONFIG[gameKey].defaultDiff;
+          const constVal = songItem.c !== undefined ? songItem.c : songItem.constant;
+
+          if (title) {
+            gameData.songs.push({
+              id: Date.now() + Math.random(),
+              targetLabel,
+              groupType: 'text',
+              title,
+              difficulty: diff,
+              constant: constVal ? parseFloat(constVal) : null,
+              isCompleted: false,
+              isTextOnly: true
+            });
+          }
+        });
+
+        allData[gameKey] = gameData;
+        saveAllData(allData);
+        closeImportModal();
+        if (gameKey !== currentGame) switchGame(gameKey);
+        else renderList();
+
+        alert(`項目「${targetLabel}」を取り込みました！`);
+
+      } catch (e) {
+        alert('無効な共有コードです。正しくコピーされているか確認してください。');
+      }
     }
 
     /* メイン描画処理 */
